@@ -1,0 +1,14 @@
+/examples/vids/src_vids
+/bench
+
+/target
+**/*.rs.bk
+#file.out#
+file.out
+
+.vscode/launch.json
+.vscode/tasks.json
+**/flamegraph.svg
+**/perf.data
+**/perf.data.old
+**/vid_dup_finder_example_cache.bin
