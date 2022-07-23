@@ -78,9 +78,9 @@ pub fn inverse_dct(raw_bytes: &[f64]) -> image::DynamicImage {
 fn bytify(image: &DynamicImage) -> Vec<f64> {
     //Now extract the raw data, convert and scale into f64, in preparation for DCT.
     image
-        .to_bytes()
-        .into_iter()
-        .map(|x| x as f64 - 128.0)
+        .as_bytes()
+        .iter()
+        .map(|x| *x as f64 - 128.0)
         .collect::<Vec<_>>()
 }
 

@@ -36,10 +36,23 @@ impl VideoHash {
     /// * Returns the hash itself if successful, otherwise
     /// * an error with the reason that the hash could not be created.
     pub fn from_path(src_path: impl AsRef<Path>) -> Result<Self, HashCreationErrorKind> {
-        Self::from_path_inner(src_path).map(|(hash, _stats)| hash)
+        Self::from_path_inner(src_path, None).map(|(hash, _stats)| hash)
     }
 
-    fn from_path_inner(src_path: impl AsRef<Path>) -> Result<(Self, VideoStats), HashCreationErrorKind> {
+    ///Create a VideoHash from the video file at src_path, but will give up if the hash cannot be created within timeout_secs.
+    /// * Returns the hash itself if successful, otherwise
+    /// * an error with the reason that the hash could not be created.
+    pub fn from_path_with_timeout(
+        src_path: impl AsRef<Path>,
+        timeout_secs: u64,
+    ) -> Result<Self, HashCreationErrorKind> {
+        Self::from_path_inner(src_path, Some(timeout_secs)).map(|(hash, _stats)| hash)
+    }
+
+    fn from_path_inner(
+        src_path: impl AsRef<Path>,
+        timeout_secs: Option<u64>,
+    ) -> Result<(Self, VideoStats), HashCreationErrorKind> {
         //Check that ffmpeg thinks there is a video at this path.
         if let Err(e) = ffmpeg_cmdline_utils::is_video_file(src_path.as_ref()) {
             return Err(HashCreationErrorKind::DetermineVideo {
@@ -49,7 +62,7 @@ impl VideoHash {
         }
 
         //since this is a video, get the video and its associated statistics
-        let (frame_iter, stats) = Self::temporal_hash_frame_builder(&src_path)?;
+        let (frame_iter, stats) = Self::temporal_hash_frame_builder(&src_path, timeout_secs)?;
         let frames = frame_iter.collect::<Vec<_>>();
 
         // If we didn't decode num_frames frames, a hash cannot be constructed from the decoded video.
@@ -84,11 +97,17 @@ impl VideoHash {
     //utility helper -- Build a ffmpeg frame reader with the correct configuration for building temporal hashes.
     fn temporal_hash_frame_builder(
         src_path: impl AsRef<Path>,
+        timeout_secs: Option<u64>,
     ) -> Result<(FfmpegFrames, VideoInfo), HashCreationErrorKind> {
-        FfmpegFrameReaderBuilder::new(src_path.as_ref().to_owned())
-            .num_frames(HASH_NUM_IMAGES as u32)
-            .fps(crate::definitions::HASH_FRAMERATE.to_string())
-            .spawn()
+        let mut ret = FfmpegFrameReaderBuilder::new(src_path.as_ref().to_owned());
+        ret.num_frames(HASH_NUM_IMAGES as u32)
+            .fps(crate::definitions::HASH_FRAMERATE);
+
+        if let Some(timeout_secs) = timeout_secs {
+            ret.timeout_secs(timeout_secs);
+        }
+
+        ret.spawn()
             .map_err(|e| HashCreationErrorKind::VideoProcessing {
                 src_path: src_path.as_ref().to_path_buf(),
                 error: e,
@@ -184,8 +203,10 @@ impl AsRef<VideoHash> for VideoHash {
 #[cfg(feature = "app_only_fns")]
 #[doc(hidden)]
 impl VideoHash {
-    pub fn from_path_with_stats(src_path: impl AsRef<Path>) -> Result<(Self, VideoStats), HashCreationErrorKind> {
-        Self::from_path_inner(src_path)
+    pub fn from_path_with_stats(
+        src_path: impl AsRef<Path>,
+    ) -> Result<(Self, VideoStats), HashCreationErrorKind> {
+        Self::from_path_inner(src_path, None)
     }
 
     const WHITE_PIXEL: [u8; 3] = [u8::MIN, u8::MIN, u8::MIN];
