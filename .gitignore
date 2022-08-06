@@ -12,3 +12,4 @@ file.out
 **/perf.data
 **/perf.data.old
 **/vid_dup_finder_example_cache.bin
+Cargo.lock
