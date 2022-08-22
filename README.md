@@ -15,8 +15,8 @@ The resulting hashes can then be compared according to their hamming distance. S
 
 ## Requirements
 Ffmpeg must be installed on your system and be accessible on the command line. You can do this by:
-* Debian-based systems: # apt install ffmpeg
-* Yum-based systems:    # yum install ffmpeg
+* Debian-based systems: `# apt install ffmpeg`
+* Yum-based systems:    `# yum install ffmpeg`
 * Windows:
     1) Download the correct installer from <https://ffmpeg.org/download.html>
     2) Run the installer and install ffmpeg to any directory
