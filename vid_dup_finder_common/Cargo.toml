@@ -1,0 +1,28 @@
+[package]
+description = "Common utilities for vid_dup_finder_lib and vid_dup_finder. To be vendored into each package upon publication."
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "vid_dup_finder_common"
+repository = "NONE"
+version = "0.1.0"
+
+[lib]
+crate-type = ["lib"]
+name = "vid_dup_finder_common"
+path = "src/lib.rs"
+
+[features]
+default = ["resize_fast"]
+resize_fast = ["fast_image_resize"]
+
+[dependencies]
+serde = {version = "1.0", features = ["derive"]}
+image = {version = "0.24", default-features = false}
+thiserror = "1.0"
+fast_image_resize = {version = "2.7.3", optional = true}
+imageproc = "0.23"
+
+
+
+[target.'cfg(windows)'.dependencies]
+winapi = {version = "0.3", features = ["winbase"]}

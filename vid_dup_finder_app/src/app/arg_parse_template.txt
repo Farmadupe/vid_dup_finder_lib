@@ -1,0 +1,72 @@
+{bin} v{version}
+
+{about}
+
+WHAT IT FINDS:
+    vid_dup_finder finds near-duplicate video files on disk. It detects videos whose
+    frames look similar, and where the videos are roughly the same length (within
+    ~5%). 
+
+    vid_dup_finder will work with most common video file formats (any format 
+    supported by FFMPEG.)
+
+LIMITATIONS:
+    vid_dup_finder will find duplicates if minor changes have been made to the 
+    video, such as resizing, small colour corrections, small crops or faint 
+    watermarks. It will not find duplicates if there are larger changes (flipping or
+    rotation, embedding in a corner of a different video etc)
+
+    To save processing time when working on large datasets, vid_dup_finder uses
+    only frames from the first 30 seconds of any video. It might think that two
+    different videos are duplicates if they start with the same intro-sequence. 
+    If this is a problem, you can use the '--skip-forward <amount>' argument to skip past
+    into-sequences. 
+
+
+PREREQUISITES:
+    Ffmpeg must be available on the command line. You can do this by:
+    * Debian-based systems: # apt install ffmpeg
+    * Yum-based systems:    # yum install ffmpeg
+    * Windows:
+        1) Download the correct installer from <https://ffmpeg.org/download.html>
+        2) Run the installer and install ffmpeg to any directory
+        3) Add the directory into the PATH environment variable
+
+CACHE
+    It takes a long time for vid_dup_finder to process videos. To save time, it
+    keeps a cache of already-processed video files
+
+GUI
+    If you are using Linux, vid_dup_finder comes with a crude GUI for viewing 
+    matches, which you can activate with the '--gui' argument. You should use the 
+    arrow keys to switch between groups of duplicates.
+
+    If you do not use Linux or do not like the GUI, there is a better GUI app
+    called Czkawka (https://github.com/qarmin/czkawka) which uses the code
+    from vid_dup_finder.
+    
+
+CROPPING
+    Sometimes a duplicate has added black bars on the sides or top/bottom of
+    the picture. This is called letterboxing. If you think duplicate videos 
+    might have letterboxing, you can use the '--cropdetect=letterbox' argument
+    to increase the chances of a match.
+
+USAGE:
+    {usage}
+    
+OPTIONS:
+{options}
+
+EXAMPLES:
+    To find all duplicates of the same video in directory "dog_vids":
+    * vid_dup_finder --files dog_vids
+
+    To find all videos which are not duplicates in "dog_vids":
+    * vid_dup_finder --files dog_vids --search-unique
+
+    To find videos in "dog_vids" that have accidentally been replicated into "cat_vids"
+    * vid_dup_finder --files cat_vids --with-refs dog_vids
+
+    To exclude a file or directory from a search, e.g "dog_vids/boring_dog_vids"
+    * vid_dup_finder --files dog_vids --exclude dog_vids/boring_dog_vids

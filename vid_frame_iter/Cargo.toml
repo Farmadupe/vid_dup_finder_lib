@@ -1,0 +1,31 @@
+[package]
+edition = "2021"
+name = "vid_frame_iter"
+version = "0.1.0"
+
+[lib]
+crate-type = ["lib"]
+name = "vid_frame_iter"
+
+[dependencies]
+gdk = "0.17"
+gio = "0.17"
+glib = {version = "0.17"}
+gstreamer = "0.20"
+gstreamer-app = {version = "0.20"}
+gstreamer-base = "0.20"
+gstreamer-pbutils = "0.20"
+gstreamer-video = "0.20"
+image = {version = "0.24", default-features = false}
+thiserror = "1.0"
+
+
+[features]
+"app_only_fns" = []
+"test-util" = []
+#"default" = []
+
+
+[dev-dependencies]
+url="2"
+

@@ -1,0 +1,22 @@
+[package]
+name = "ffmpeg_gst_wrapper"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["lib"]
+
+[features]
+"ffmpeg_backend" = ["ffmpeg_cmdline_utils"]
+"gstreamer_backend" = ["vid_frame_iter", "glib"]
+"default" = ["gstreamer_backend"]
+
+[dependencies]
+image = {version = "0.24"}
+ffmpeg_cmdline_utils = {path = "../ffmpeg_cmdline_utils", optional = true}
+vid_frame_iter = {path = "../vid_frame_iter", optional = true}
+glib = {version = "0.17", features = ["v2_66"], optional = true}
+serde = {version = "1.0", features = ["derive"]}
+thiserror = "1.0"
+url = "2.2"
