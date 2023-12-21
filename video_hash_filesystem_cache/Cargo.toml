@@ -24,7 +24,7 @@ gstreamer_backend=["vid_dup_finder_lib/gstreamer_backend"]
 bincode = "1.3"
 generic_filesystem_cache = {path = "../generic_filesystem_cache", version = "0.1"}
 vid_dup_finder_lib = {path = "../vid_dup_finder_lib", version = "0.2", default-features = false, features = ["app_only_fns"]}
-itertools = "0.10"
+itertools = "0.12"
 log = "0.4"
 rand = "0.8"
 rayon = {version = "1.5", optional = true}
