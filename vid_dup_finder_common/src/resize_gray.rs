@@ -1,6 +1,8 @@
-use std::{borrow::Borrow, ops::Deref};
+use std::{borrow::Borrow, num::NonZeroU32, ops::Deref};
 
 use image::{FlatSamples, GrayImage, ImageBuffer, Luma};
+
+use crate::Crop;
 
 #[must_use]
 pub fn crop_resize_buf<I, C>(
@@ -21,7 +23,6 @@ where
 
     use fr::CropBox;
     use fr::DynamicImageView::U8 as DynView;
-    use std::num::NonZeroU32;
 
     let new_width = NonZeroU32::try_from(new_width).unwrap();
     let new_height = NonZeroU32::try_from(new_height).unwrap();
@@ -64,24 +65,31 @@ where
     dst_frame_img.unwrap()
 }
 
+///Crop an image, then resize it.
 #[must_use]
 pub fn crop_resize_flat<C>(
     src_frame: FlatSamples<C>,
-    new_width: u32,
-    new_height: u32,
-    crop: (u32, u32, u32, u32),
-) -> GrayImage
+    new_width: NonZeroU32,
+    new_height: NonZeroU32,
+    crop: Crop,
+) -> Option<GrayImage>
 where
     C: AsRef<[u8]>,
 {
-    let (left, top, width, height) = crop;
+    //easier to not consider zero size images
+    let src_frame_width = NonZeroU32::try_from(src_frame.layout.width).ok()?;
+    let src_frame_height = NonZeroU32::try_from(src_frame.layout.height).ok()?;
+
+    let (left, top, width, height) = crop.as_view_args();
+    let width = NonZeroU32::try_from(width).ok()?;
+    let height = NonZeroU32::try_from(height).ok()?;
 
     //make sure crop frame fits the image
-    let max_width = src_frame.layout.width - left - 1;
-    let width = max_width.min(width);
+    let max_width = u32::from(src_frame_width).saturating_sub(left);
+    let width = NonZeroU32::try_from(max_width.min(u32::from(width))).ok()?;
 
-    let max_height = src_frame.layout.height - top - 1;
-    let height = max_height.min(height);
+    let max_height = u32::from(src_frame_height).saturating_sub(top);
+    let height = NonZeroU32::try_from(max_height.min(u32::from(height))).ok()?;
 
     // let src_width = src_frame.width();
     // let src_height = src_frame.height();
@@ -91,10 +99,6 @@ where
     use fast_image_resize as fr;
 
     use fr::CropBox;
-    use std::num::NonZeroU32;
-
-    let new_width = NonZeroU32::try_from(new_width).unwrap();
-    let new_height = NonZeroU32::try_from(new_height).unwrap();
 
     let src_frame_raw: &[u8] = src_frame.as_slice();
     let old_width = src_frame.layout.width as usize;
@@ -108,22 +112,27 @@ where
         .collect::<Vec<_>>();
 
     let mut src_frame_fr = fr::ImageView::new(
-        src_frame.layout.width.try_into().unwrap(),
-        src_frame.layout.height.try_into().unwrap(),
+        src_frame_width,
+        src_frame_height,
         rows,
     )
     .unwrap();
 
     {
+        // println!(
+        //     "src_width: {}, src_height: {}, crop: {:?}",
+        //     src_frame.layout.width, src_frame.layout.height, crop
+        // );
+        // println!("width: {width:?}, height: {height:?}");
+
         let crop_box = CropBox {
             left,
             top,
-            width: NonZeroU32::try_from(width).unwrap(),
-            height: NonZeroU32::try_from(height).unwrap(),
+            width,
+            height,
         };
         if let Err(_e) = src_frame_fr.set_crop_box(crop_box) {
-            // println!("{crop_box:#?}");
-            // println!("{e:#?}");
+            return None;
         }
     }
 
@@ -149,7 +158,7 @@ where
     std::mem::drop(dst_frame_fr);
     let dst_frame_img = GrayImage::from_vec(new_width.into(), new_height.into(), dst_frame_buf);
 
-    dst_frame_img.unwrap()
+    dst_frame_img
 }
 
 #[must_use]
@@ -166,7 +175,6 @@ where
     {
         use fast_image_resize as fr;
         use fr::DynamicImageView::U8 as DynView;
-        use std::num::NonZeroU32;
 
         let src_frame_img = src_frame_img.borrow();
 

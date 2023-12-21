@@ -1,5 +1,6 @@
 use std::{
     hash::Hash,
+    num::NonZeroU32,
     path::{Path, PathBuf},
 };
 use vid_dup_finder_common::video_frames_gray::VdfFrameExt;
@@ -23,6 +24,7 @@ use crate::{
 use ffmpeg_gst_wrapper::ffmpeg_impl as ffmpeg_gst;
 
 use ffmpeg_gst::{duration, FrameReaderCfgUnified, VideoFrameGrayUnified};
+use image::GenericImageView;
 
 /// If hashes created using the default settings do
 /// not work for you, you can customize how input videos are processed
@@ -79,31 +81,25 @@ impl VideoHash {
         opts: HashCreationOptions,
     ) -> Result<Self, HashCreationErrorKind> {
         let src_path = src_path.as_ref().to_path_buf();
-        let dct_size = DCT_SIZE as u32;
+        let dct_size = NonZeroU32::try_from(DCT_SIZE as u32).unwrap();
         //println!("{src_path:?}");
+
+        let iterate_frames =
+            || Self::iterate_video_frames_inner(&src_path, opts.skip_forward_amount);
 
         //Before generating the hash, if requested we detect black bands around the edges of the video
         //frames, which will be discarded before generating the hash.
+
         let crop = match opts.cropdetect {
-            CropdetectType::NoCrop => None,
+            CropdetectType::NoCrop => Self::detect_noletterbox_crop(iterate_frames()?)?,
             CropdetectType::Letterbox => {
-                let crop_frame_iter =
-                    Self::iterate_video_frames_inner(&src_path, opts.skip_forward_amount)?;
-                Self::detect_crop(crop_frame_iter, opts.cropdetect)?
+                Self::detect_letterbox_crop(iterate_frames()?, opts.cropdetect)?
             }
-        };
+        }.ok_or(HashCreationErrorKind::Other)?;
 
         let dct = {
-            let dct_frame_iter =
-                Self::iterate_video_frames_inner(&src_path, opts.skip_forward_amount)?;
-
-            // If we have a crop, then use "as_view_args" to get the arguments to
-            // be used with crop_resize_flat, otherwise use a default set of
-            // arguments to resize the entire frame to 64x64.
-            let resize_args = crop.map_or((0, 0, dct_size, dct_size), |crop| crop.as_view_args());
-
-            let frames_64x64 = dct_frame_iter
-                .map(|frame| crop_resize_flat(frame.as_flat(), dct_size, dct_size, resize_args));
+            let frames_64x64 = iterate_frames()?
+                .filter_map(|frame| crop_resize_flat(frame.as_flat(), dct_size, dct_size, crop));
 
             Dct3d::from_images(frames_64x64)
         };
@@ -152,7 +148,15 @@ impl VideoHash {
         Ok(ret)
     }
 
-    fn detect_crop(
+    fn detect_noletterbox_crop(
+        mut frames: impl Iterator<Item = VideoFrameGrayUnified>,
+    ) -> Result<Option<Crop>, HashCreationErrorKind> {
+        let dimensions = frames.next().unwrap().dimensions();
+
+        Ok(Some(Crop::new(dimensions, 0, 0, 0, 0)))
+    }
+
+    fn detect_letterbox_crop(
         frames: impl Iterator<Item = VideoFrameGrayUnified>,
         crop_type: CropdetectType,
     ) -> Result<Option<Crop>, HashCreationErrorKind> {

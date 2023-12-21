@@ -164,13 +164,13 @@ impl FileProjection {
         let src_fatal = self
             .src_paths
             .iter()
-            .filter_map(|p| (!p.exists()).then(|| Err(PathNotFound(p.to_owned()))))
+            .filter(|&p| (!p.exists())).map(|p| Err(PathNotFound(p.to_owned())))
             .next();
 
         let excl_fatal = self
             .excl_paths
             .iter()
-            .filter_map(|p| (!p.exists()).then(|| Err(ExclPathNotFound(p.to_owned()))))
+            .filter(|&p| (!p.exists())).map(|p| Err(ExclPathNotFound(p.to_owned())))
             .next();
 
         let (enumerated_paths, recoverable_errs): (_, Vec<_>) =

@@ -305,7 +305,7 @@ fn build_app() -> clap::Command {
             .long("sort")
             .help("Whether to sort results by the number of matching videos, or by how similar the videos are")
             .value_parser(value_parser!(Sorting))
-            .default_value("distance")
+            .default_value("num-matches")
             .num_args(1)
             .display_order(get_ordering(SORTED)),
     );

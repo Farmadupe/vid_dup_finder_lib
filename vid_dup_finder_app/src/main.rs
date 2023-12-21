@@ -16,8 +16,6 @@ extern crate lazy_static;
 
 mod app;
 
-use ffmpeg_gst_wrapper::ffmpeg_impl as ffmpeg_gst;
-
 fn main() {
     vid_dup_finder_lib::init_gstreamer();
 

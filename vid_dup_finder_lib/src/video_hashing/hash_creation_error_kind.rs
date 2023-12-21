@@ -20,4 +20,7 @@ pub enum HashCreationErrorKind {
         src_path: PathBuf,
         error: FfmpegGstError,
     },
+
+    #[error("Video Processing Error")]
+    Other,
 }

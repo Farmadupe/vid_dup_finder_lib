@@ -24,7 +24,7 @@ gstreamer_backend = [
     "video_hash_filesystem_cache/gstreamer_backend",
     "ffmpeg_gst_wrapper/gstreamer_backend"
 ]
-default = ["gstreamer_backend"]
+default = ["ffmpeg_backend"]
 print_timings = []
 
 [[bin]]
