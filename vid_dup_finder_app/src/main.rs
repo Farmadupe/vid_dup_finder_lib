@@ -20,8 +20,9 @@ fn main() {
     vid_dup_finder_lib::init_gstreamer();
 
     //seems to struggle on my machine with some file formats..
-    #[cfg(feature = "gstreamer_backend")]
-    ffmpeg_gst::deprioritize_nvidia_gpu_decoding();
+    //#[cfg(feature = "gstreamer_backend")]
+    //ffmpeg_gst::deprioritize_nvidia_gpu_decoding();
+    
 
     let return_code = app::run_app();
     std::process::exit(return_code)
