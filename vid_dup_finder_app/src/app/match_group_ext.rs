@@ -5,10 +5,8 @@ use vid_dup_finder_lib::MatchGroup;
 
 use vid_dup_finder_common::FrameSeqRgb;
 
-#[cfg(feature="gstreamer_backend")]
-use ffmpeg_gst_wrapper::gst_impl as ffmpeg_gst;
-#[cfg(feature="ffmpeg_backend")]
-use ffmpeg_gst_wrapper::ffmpeg_impl as ffmpeg_gst;
+
+use ffmpeg_gst_wrapper::ffmpeg_gst;
 
 use ffmpeg_gst::FrameReaderCfgUnified;
 

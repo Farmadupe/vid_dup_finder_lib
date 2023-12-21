@@ -125,10 +125,7 @@
 mod definitions;
 mod video_hashing;
 
-#[cfg(feature="gstreamer_backend")]
-use ffmpeg_gst_wrapper::gst_impl as ffmpeg_gst;
-#[cfg(feature="ffmpeg_backend")]
-use ffmpeg_gst_wrapper::ffmpeg_impl as ffmpeg_gst;
+use ffmpeg_gst_wrapper::ffmpeg_gst;
 
 pub fn init_gstreamer() {
     ffmpeg_gst::init_gstreamer()

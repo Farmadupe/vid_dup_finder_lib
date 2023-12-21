@@ -1,3 +1,5 @@
+use cfg_if::cfg_if;
+
 #[cfg(feature = "gstreamer_backend")]
 pub mod gst_impl {
     use image::{GenericImageView, GrayImage, Luma, Rgb, RgbImage};
@@ -380,3 +382,11 @@ pub mod ffmpeg_impl {
 //    deprioritize_nvidia_gpu_decoding, duration, init_gstreamer, resolution, FfmpegGstError,
 //    FrameReaderCfgUnified, VideoFrameGrayUnified,
 //};
+
+cfg_if! {
+    if #[cfg(feature = "gstreamer_backend")] {
+        pub use gst_impl as ffmpeg_gst;
+    } else if #[cfg(feature = "ffmpeg_backend")] {
+        pub use ffmpeg_impl as ffmpeg_gst;
+    }
+}
