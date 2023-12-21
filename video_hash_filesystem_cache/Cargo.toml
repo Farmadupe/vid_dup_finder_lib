@@ -15,7 +15,7 @@ name = "video_hash_filesystem_cache"
 path = "src/lib.rs"
 
 [features]
-#default = ["parallel_loading"]
+default = ["parallel_loading"]
 parallel_loading = ["rayon"]
 ffmpeg_backend=["vid_dup_finder_lib/ffmpeg_backend"]
 gstreamer_backend=["vid_dup_finder_lib/gstreamer_backend"]

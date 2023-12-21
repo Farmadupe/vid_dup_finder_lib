@@ -8,14 +8,14 @@ crate-type = ["lib"]
 name = "vid_frame_iter"
 
 [dependencies]
-gdk = "0.17"
-gio = "0.17"
-glib = {version = "0.17"}
-gstreamer = "0.20"
-gstreamer-app = {version = "0.20"}
-gstreamer-base = "0.20"
-gstreamer-pbutils = "0.20"
-gstreamer-video = "0.20"
+gdk = "0.18"
+gio = "0.18"
+glib = {version = "0.18"}
+gstreamer = "0.21"
+gstreamer-app = {version = "0.21"}
+gstreamer-base = "0.21"
+gstreamer-pbutils = "0.21"
+gstreamer-video = "0.21"
 image = {version = "0.24", default-features = false}
 thiserror = "1.0"
 

@@ -151,7 +151,7 @@ impl VideoHash {
     fn detect_noletterbox_crop(
         mut frames: impl Iterator<Item = VideoFrameGrayUnified>,
     ) -> Result<Option<Crop>, HashCreationErrorKind> {
-        let dimensions = frames.next().unwrap().dimensions();
+        let dimensions = frames.next().map(|f| f.dimensions()).ok_or(HashCreationErrorKind::Other)?;
 
         Ok(Some(Crop::new(dimensions, 0, 0, 0, 0)))
     }
