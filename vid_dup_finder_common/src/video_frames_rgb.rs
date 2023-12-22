@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use image::{GenericImageView, RgbImage};
 
 use crate::{
@@ -46,7 +48,7 @@ impl FrameSeqRgb {
     }
 
     #[must_use]
-    pub fn resize(&self, new_width: u32, new_height: u32) -> Self {
+    pub fn resize(&self, new_width: NonZeroU32, new_height: NonZeroU32) -> Self {
         let resized_frames = self
             .frames
             .iter()

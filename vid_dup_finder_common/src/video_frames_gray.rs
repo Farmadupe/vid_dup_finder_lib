@@ -1,15 +1,10 @@
-use std::borrow::Borrow;
-
-use image::{GenericImageView, GrayImage, ImageBuffer, Luma, SubImage};
+use image::{GenericImageView, Luma, SubImage};
 
 use crate::crop::Crop;
-use crate::crop_resize_buf;
-
-pub type GrayImageRef<'a> = image::ImageBuffer<Luma<u8>, &'a [u8]>;
 
 #[derive(Copy, Clone)]
 pub enum LetterboxColour {
-    _BlackWhite(u8),
+    BlackWhite(u8),
     AnyColour(u8),
 }
 
@@ -33,50 +28,6 @@ where
     #[must_use]
     pub fn into_inner(self) -> Vec<T> {
         self.frames
-    }
-}
-
-impl<'a> VideoFramesGray<SubImageGrayFlatNT<'a>> {}
-
-impl<I> VideoFramesGray<I>
-where
-    I: Borrow<ImageBuffer<Luma<u8>, Vec<u8>>>,
-{
-    #[must_use]
-    pub fn crop_resize_owned(
-        &self,
-        new_width: u32,
-        new_height: u32,
-        crop: (u32, u32, u32, u32),
-    ) -> VideoFramesGray<GrayImage> {
-        let new_frames = self
-            .frames
-            .iter()
-            .map(|frame| crop_resize_buf(frame.borrow(), new_width, new_height, crop))
-            .collect();
-
-        VideoFramesGray { frames: new_frames }
-    }
-}
-
-impl<'a, I> VideoFramesGray<I>
-where
-    I: Borrow<ImageBuffer<Luma<u8>, &'a [u8]>>,
-{
-    #[must_use]
-    pub fn crop_resize_borrowed(
-        &self,
-        new_width: u32,
-        new_height: u32,
-        crop: (u32, u32, u32, u32),
-    ) -> VideoFramesGray<GrayImage> {
-        let new_frames = self
-            .frames
-            .iter()
-            .map(|frame| crop_resize_buf(frame.borrow(), new_width, new_height, crop))
-            .collect();
-
-        VideoFramesGray { frames: new_frames }
     }
 }
 
@@ -115,7 +66,7 @@ pub trait VdfFrameExt {
             let is_letterbox = |strip: &SubImage<&Self::Item>| {
                 use LetterboxColour::*;
                 match colour {
-                    _BlackWhite(tol) => strip.pixels().all(|(_x, _y, image::Luma::<u8>([l]))| {
+                    BlackWhite(tol) => strip.pixels().all(|(_x, _y, image::Luma::<u8>([l]))| {
                         let black_enough = l <= tol;
                         let white_enough = l >= (u8::MAX - tol);
                         black_enough || white_enough
@@ -215,39 +166,5 @@ impl image::GenericImageView for RgbImageAsGray {
     fn get_pixel(&self, x: u32, y: u32) -> Self::Pixel {
         use image::Pixel;
         self.0.get_pixel(x, y).to_luma()
-    }
-}
-
-pub struct SubImageGrayNT<'a>(pub image::SubImage<&'a GrayImageRef<'a>>);
-impl<'a> image::GenericImageView for SubImageGrayNT<'a> {
-    type Pixel = image::Luma<u8>;
-
-    fn dimensions(&self) -> (u32, u32) {
-        self.0.dimensions()
-    }
-
-    fn bounds(&self) -> (u32, u32, u32, u32) {
-        self.0.bounds()
-    }
-
-    fn get_pixel(&self, x: u32, y: u32) -> Self::Pixel {
-        self.0.get_pixel(x, y)
-    }
-}
-
-pub struct SubImageGrayFlatNT<'a>(pub SubImage<&'a image::flat::View<&'a [u8], Luma<u8>>>);
-impl<'a> image::GenericImageView for SubImageGrayFlatNT<'a> {
-    type Pixel = image::Luma<u8>;
-
-    fn dimensions(&self) -> (u32, u32) {
-        self.0.dimensions()
-    }
-
-    fn bounds(&self) -> (u32, u32, u32, u32) {
-        self.0.bounds()
-    }
-
-    fn get_pixel(&self, x: u32, y: u32) -> Self::Pixel {
-        self.0.get_pixel(x, y)
     }
 }

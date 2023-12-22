@@ -4,6 +4,10 @@ use image::{FlatSamples, GrayImage, ImageBuffer, Luma};
 
 use crate::Crop;
 
+use fast_image_resize as fr;
+use fr::CropBox;
+use fr::DynamicImageView::U8 as DynView;
+
 #[must_use]
 pub fn crop_resize_buf<I, C>(
     src_frame: I,
@@ -18,11 +22,6 @@ where
     let src_frame = src_frame.borrow();
 
     let (left, top, width, height) = crop;
-
-    use fast_image_resize as fr;
-
-    use fr::CropBox;
-    use fr::DynamicImageView::U8 as DynView;
 
     let new_width = NonZeroU32::try_from(new_width).unwrap();
     let new_height = NonZeroU32::try_from(new_height).unwrap();
@@ -96,10 +95,6 @@ where
 
     //println!("src_dimensions: {src_width:?}x{src_height:?}, src_crop: (left: {left}, top: {top}, width: {width}, height: {height}), new_width: {new_width}, new_height: {new_height}");
 
-    use fast_image_resize as fr;
-
-    use fr::CropBox;
-
     let src_frame_raw: &[u8] = src_frame.as_slice();
     let old_width = src_frame.layout.width as usize;
     let old_height_stride = src_frame.layout.height_stride;
@@ -111,12 +106,7 @@ where
         })
         .collect::<Vec<_>>();
 
-    let mut src_frame_fr = fr::ImageView::new(
-        src_frame_width,
-        src_frame_height,
-        rows,
-    )
-    .unwrap();
+    let mut src_frame_fr = fr::ImageView::new(src_frame_width, src_frame_height, rows).unwrap();
 
     {
         // println!(
@@ -162,72 +152,16 @@ where
 }
 
 #[must_use]
-pub fn resize_frame<I, C>(frame: I, new_width: u32, new_height: u32) -> GrayImage
+pub fn resize_frame<I, C>(frame: I, new_width: NonZeroU32, new_height: NonZeroU32) -> GrayImage
 where
     I: Borrow<ImageBuffer<Luma<u8>, C>>,
     C: Deref<Target = [u8]>,
+    C: AsRef<[u8]>,
 {
-    #[cfg(feature = "resize_fast")]
-    fn resize_frame_fast<I, C>(src_frame_img: I, new_width: u32, new_height: u32) -> GrayImage
-    where
-        I: Borrow<ImageBuffer<Luma<u8>, C>>,
-        C: Deref<Target = [u8]>,
-    {
-        use fast_image_resize as fr;
-        use fr::DynamicImageView::U8 as DynView;
+    let src_frame_img = frame.borrow();
+    let flat = src_frame_img.as_flat_samples();
 
-        let src_frame_img = src_frame_img.borrow();
+    let zero_crop = Crop::new((src_frame_img.width(), src_frame_img.height()), 0, 0, 0, 0);
 
-        let new_width = NonZeroU32::try_from(new_width).unwrap();
-        let new_height = NonZeroU32::try_from(new_height).unwrap();
-
-        let src_frame_fr = fr::ImageView::from_buffer(
-            src_frame_img.width().try_into().unwrap(),
-            src_frame_img.height().try_into().unwrap(),
-            src_frame_img.as_raw(),
-        )
-        .unwrap();
-
-        let mut dst_frame_buf =
-            vec![0u8; u32::from(new_height) as usize * u32::from(new_height) as usize];
-        let mut dst_frame_fr = fr::Image::from_slice_u8(
-            new_width,
-            new_height,
-            &mut dst_frame_buf,
-            src_frame_fr.pixel_type(),
-        )
-        .unwrap();
-
-        let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
-
-        resizer
-            .resize(&DynView(src_frame_fr), &mut dst_frame_fr.view_mut())
-            .unwrap();
-
-        std::mem::drop(dst_frame_fr);
-        let dst_frame_img = GrayImage::from_vec(new_width.into(), new_height.into(), dst_frame_buf);
-
-        dst_frame_img.unwrap()
-    }
-
-    #[must_use]
-    #[cfg(not(feature = "resize_fast"))]
-    fn resize_frame_image<I, C>(frame: I, new_width: u32, new_height: u32) -> GrayImage
-    where
-        I: Borrow<ImageBuffer<Luma<u8>, C>>,
-        C: Deref<Target = [u8]>,
-    {
-        image::imageops::resize(
-            frame.borrow(),
-            new_width,
-            new_height,
-            image::imageops::FilterType::Triangle,
-        )
-    }
-
-    #[cfg(feature = "resize_fast")]
-    return resize_frame_fast(frame, new_width, new_height);
-
-    #[cfg(not(feature = "resize_fast"))]
-    return resize_frame_image(frame, new_width, new_height);
+    crop_resize_flat(flat, new_width, new_height, zero_crop).unwrap()
 }

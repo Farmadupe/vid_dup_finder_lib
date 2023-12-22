@@ -16,7 +16,7 @@ version = "0.2.0"
 "test-util" = []
 "ffmpeg_backend" = ["ffmpeg_gst_wrapper/ffmpeg_backend"]
 "gstreamer_backend" = ["gstreamer", "ffmpeg_gst_wrapper/gstreamer_backend"]
-"default" = ["gstreamer_backend"]
+"default" = ["ffmpeg_backend"]
 
 
 

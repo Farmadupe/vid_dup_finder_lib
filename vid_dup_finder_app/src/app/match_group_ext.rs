@@ -112,6 +112,8 @@ fn grid_images_with_text(images: &[(String, Vec<RgbImage>)]) -> Result<RgbImage,
 fn to_image_temp(
     img_paths: impl IntoIterator<Item = impl AsRef<Path>>,
 ) -> Result<RgbImage, String> {
+    use std::num::NonZeroU32;
+
     let all_thumbs: Vec<(String, Vec<RgbImage>)> = img_paths
         .into_iter()
         .map(|src_path| {
@@ -171,7 +173,8 @@ fn to_image_temp(
             if false {
                 vec![(path, frames.into_inner())].into_iter()
             } else {
-                let new_frames = frames.resize(150, 150);
+                let size = NonZeroU32::new(150).expect("literal value");
+                let new_frames = frames.resize(size, size);
                 let new_frames = new_frames.into_inner();
                 //println!("{:?}, {}", new_frames[0].dimensions(), new_frames.len());
                 vec![(path, new_frames)].into_iter()

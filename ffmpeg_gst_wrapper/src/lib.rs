@@ -1,5 +1,8 @@
 use cfg_if::cfg_if;
 
+#[cfg(all(feature = "ffmpeg_backend", feature = "gstreamer_backend"))]
+compile_error!("feature \"ffmpeg_backend\" and feature \"gstreamer_backend\" cannot be enabled at the same time");
+
 #[cfg(feature = "gstreamer_backend")]
 pub mod gst_impl {
     use image::{GenericImageView, GrayImage, Luma, Rgb, RgbImage};
@@ -370,18 +373,6 @@ pub mod ffmpeg_impl {
     //noop -- gst specific function.
     pub fn deprioritize_nvidia_gpu_decoding() {}
 }
-
-//#[cfg(feature = "gstreamer_backend")]
-//pub use gst_impl::{
-//    deprioritize_nvidia_gpu_decoding, duration, init_gstreamer, resolution, FfmpegGstError,
-//    FrameReaderCfgUnified, VideoFrameGrayUnified,
-//};
-//
-//#[cfg(feature = "ffmpeg_backend")]
-//pub use ffmpeg_impl::{
-//    deprioritize_nvidia_gpu_decoding, duration, init_gstreamer, resolution, FfmpegGstError,
-//    FrameReaderCfgUnified, VideoFrameGrayUnified,
-//};
 
 cfg_if! {
     if #[cfg(feature = "gstreamer_backend")] {

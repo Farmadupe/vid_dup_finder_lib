@@ -329,7 +329,7 @@ fn window_connect_key_press_event_callback(
     native_res_button: &ToggleButton,
     up_button: &Button,
     down_button: &Button,
-) -> gtk4::Inhibit {
+) -> glib::Propagation {
     use gdk4::Key;
 
     match keyval {
@@ -393,5 +393,5 @@ fn window_connect_key_press_event_callback(
     }
     rerender_gui(state, entries_box, window, idx_label);
 
-    gtk4::Inhibit(true)
+    glib::Propagation::Proceed
 }

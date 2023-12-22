@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
     ffi::OsString,
+    num::NonZeroU32,
     path::{Path, PathBuf},
     sync::RwLock,
     time::Duration,
@@ -146,8 +147,9 @@ impl GuiEntryState {
 
         //resize the frames to a constant size for consistency between videos with different resolutions.
         let resize_and_get_len = |frame: GrayImage| -> Option<u64> {
+            let size = NonZeroU32::try_from(500).expect("literal");
             let frame_constant_size =
-                vid_dup_finder_common::resize_gray::resize_frame(frame, 500, 500);
+                vid_dup_finder_common::resize_gray::resize_frame(frame, size, size);
 
             let mut buf = std::io::Cursor::new(vec![]);
 

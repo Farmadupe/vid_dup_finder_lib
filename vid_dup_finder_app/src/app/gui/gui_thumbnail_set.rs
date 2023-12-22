@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf},
+    path::{Path, PathBuf}, num::NonZeroU32,
 };
 
 use gdk_pixbuf::Pixbuf;
@@ -99,6 +99,7 @@ impl ThumbRow {
 
                 let images = it
                     .map(|thumb| {
+                        let size = NonZeroU32::try_from(size).unwrap();
                         vid_dup_finder_common::resize_rgb::resize_img_rgb(thumb, size, size)
                     })
                     .collect::<Vec<_>>();

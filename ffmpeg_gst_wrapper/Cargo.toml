@@ -10,7 +10,7 @@ crate-type = ["lib"]
 [features]
 "ffmpeg_backend" = ["ffmpeg_cmdline_utils"]
 "gstreamer_backend" = ["vid_frame_iter", "glib"]
-"default" = ["gstreamer_backend"]
+"default" = []
 
 [dependencies]
 image = {version = "0.24"}
