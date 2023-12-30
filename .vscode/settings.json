@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./vid_dup_finder_app/Cargo.toml"
+    ]
+}

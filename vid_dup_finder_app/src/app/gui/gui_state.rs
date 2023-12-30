@@ -14,7 +14,7 @@ use image::GrayImage;
 #[cfg(feature = "parallel_loading")]
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
-use ffmpeg_gst_wrapper::ffmpeg_impl as ffmpeg_gst;
+use ffmpeg_gst_wrapper::ffmpeg_gst;
 
 use super::{
     gui_thumbnail_set::{GuiThumbnailSet, ThumbChoice},
@@ -449,7 +449,7 @@ pub struct GuiState {
 
 impl GuiState {
     pub fn new(thunks: Vec<ResolutionThunk>, single_mode: bool) -> Self {
-        let default_zoom_state = ZoomState::new(50, 1000, 50, 50);
+        let default_zoom_state = ZoomState::new(50, 2000, 50, 50);
 
         let current_entry = GuiEntryState::new(
             thunks.get(0).unwrap().clone(),

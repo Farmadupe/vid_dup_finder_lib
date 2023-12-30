@@ -142,4 +142,4 @@ pub use definitions::{CropdetectType, DEFAULT_SEARCH_TOLERANCE};
 #[cfg(any(feature = "test-util", test))]
 pub use definitions::TOLERANCE_SCALING_FACTOR;
 #[cfg(any(feature = "test-util", test))]
-pub use video_hashing::video_hash::test_util::{self, *};
+pub use video_hashing::video_hash::test_util;
