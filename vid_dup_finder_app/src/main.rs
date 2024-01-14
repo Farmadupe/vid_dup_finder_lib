@@ -1,5 +1,18 @@
+#![allow(clippy::let_and_return)]
+#![allow(clippy::len_without_is_empty)]
 #![warn(clippy::cast_lossless)]
-#![allow(clippy::let_and_return)] // stylistic preference
+#![warn(clippy::print_stdout)]
+#![warn(clippy::print_stderr)]
+//#![warn(clippy::todo)]
+//#![warn(clippy::unimplemented)]
+//#![warn(clippy::unwrap_used)]
+//#![warn(clippy::panic)]
+//#![warn(clippy::expect_used)]
+//#![warn(clippy::pedantic)]
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::cast_sign_loss)]
 
 #[macro_use]
 extern crate log;

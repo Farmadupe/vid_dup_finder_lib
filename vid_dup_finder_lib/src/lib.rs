@@ -3,11 +3,17 @@
 #![warn(clippy::cast_lossless)]
 #![warn(clippy::print_stdout)]
 #![warn(clippy::print_stderr)]
+#![warn(clippy::todo)]
+#![warn(clippy::unimplemented)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::panic)]
+//#![warn(clippy::expect_used)]
 //#![warn(clippy::pedantic)]
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::cast_sign_loss)]
+
 
 //! # Overview
 //! `vid_dup_finder_lib` is a library for finding near-duplicate video files, even if the videos are in different
@@ -128,7 +134,7 @@ mod video_hashing;
 use ffmpeg_gst_wrapper::ffmpeg_gst;
 
 pub fn init_gstreamer() {
-    ffmpeg_gst::init_gstreamer()
+    ffmpeg_gst::init_gstreamer();
 }
 
 pub use video_hashing::{

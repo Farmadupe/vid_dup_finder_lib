@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
-    path::{Path, PathBuf}, num::NonZeroU32,
+    num::NonZeroU32,
+    path::{Path, PathBuf},
 };
 
 use gdk_pixbuf::Pixbuf;
@@ -43,8 +44,8 @@ impl ThumbRow {
             .map(|it| {
                 it.filter_map(|res| match res {
                     Ok(x) => Some(x),
-                    Err(e) => {
-                        println!("{e:?}");
+                    Err(_e) => {
+                        //println!("{e:?}");
                         None
                     }
                 })
@@ -121,7 +122,7 @@ impl ThumbRow {
         dbg!(crop);
         let frames = uncropped_frames.crop(crop.as_view_args());
 
-        println!("{crop:#?}");
+        //println!("{crop:#?}");
 
         Self {
             thumbs: frames.into_inner(),

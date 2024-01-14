@@ -61,7 +61,7 @@ impl VideoFrameIterBuilder {
         // Create our pipeline from a pipeline description string.
         let src_path = self.uri;
         let pipeline_desc =
-            format!("uridecodebin uri=\"{src_path}\" ! decodebin max-size-buffers=1 ! {fps_arg} videoconvert ! appsink name=sink");
+            format!("uridecodebin uri=\"{src_path}\" buffer-size=1 ! {fps_arg} videoconvert ! appsink name=sink");
         let pipeline = gstreamer::parse_launch(&pipeline_desc)
             .expect("failed to create a pipeline")
             .downcast::<gstreamer::Pipeline>()
@@ -450,7 +450,9 @@ impl GenericImageView for GrayFrame {
             .dimensions()
     }
 
+    #[warn(deprecated)]
     fn bounds(&self) -> (u32, u32, u32, u32) {
+        #[allow(deprecated)]
         self.as_flat()
             .as_view::<image::Luma<u8>>()
             .expect("unreachable")
@@ -652,7 +654,9 @@ impl GenericImageView for RgbFrame {
             .dimensions()
     }
 
+    #[warn(deprecated)]
     fn bounds(&self) -> (u32, u32, u32, u32) {
+        #[allow(deprecated)]
         self.as_flat()
             .as_view::<image::Rgb<u8>>()
             .expect("unreachable")

@@ -60,7 +60,9 @@ pub mod gst_impl {
             self.0.dimensions()
         }
 
+        #[warn(deprecated)]
         fn bounds(&self) -> (u32, u32, u32, u32) {
+            #[allow(deprecated)]
             self.0.bounds()
         }
 
@@ -83,6 +85,12 @@ pub mod gst_impl {
         }
     }
 
+    impl AsRef<VideoFrameRgbUnified> for VideoFrameRgbUnified {
+        fn as_ref(&self) -> &VideoFrameRgbUnified {
+            self
+        }
+    }
+
     #[derive(Debug, Clone)]
     pub struct VideoFrameGrayUnified(GrayFrame);
 
@@ -93,7 +101,9 @@ pub mod gst_impl {
             self.0.dimensions()
         }
 
+        #[warn(deprecated)]
         fn bounds(&self) -> (u32, u32, u32, u32) {
+            #[allow(deprecated)]
             self.0.bounds()
         }
 
@@ -113,6 +123,12 @@ pub mod gst_impl {
 
         pub fn frame_owned(&self) -> GrayImage {
             self.0.clone().to_imagebuffer()
+        }
+    }
+
+    impl AsRef<VideoFrameGrayUnified> for VideoFrameGrayUnified {
+        fn as_ref(&self) -> &VideoFrameGrayUnified {
+            self
         }
     }
 
@@ -227,6 +243,12 @@ pub mod ffmpeg_impl {
     #[derive(Debug, Clone)]
     pub struct VideoFrameGrayUnified(image::GrayImage);
 
+    impl AsRef<VideoFrameGrayUnified> for VideoFrameGrayUnified {
+        fn as_ref(&self) -> &VideoFrameGrayUnified {
+            self
+        }
+    }
+
     impl GenericImageView for VideoFrameGrayUnified {
         type Pixel = Luma<u8>;
 
@@ -234,7 +256,9 @@ pub mod ffmpeg_impl {
             self.0.dimensions()
         }
 
+        #[warn(deprecated)]
         fn bounds(&self) -> (u32, u32, u32, u32) {
+            #[allow(deprecated)]
             self.0.bounds()
         }
 
@@ -253,7 +277,9 @@ pub mod ffmpeg_impl {
             self.0.dimensions()
         }
 
+        #[warn(deprecated)]
         fn bounds(&self) -> (u32, u32, u32, u32) {
+            #[allow(deprecated)]
             self.0.bounds()
         }
 
@@ -273,6 +299,12 @@ pub mod ffmpeg_impl {
 
         pub fn frame_owned(&self) -> RgbImage {
             self.0.clone()
+        }
+    }
+
+    impl AsRef<VideoFrameRgbUnified> for VideoFrameRgbUnified {
+        fn as_ref(&self) -> &VideoFrameRgbUnified {
+            self
         }
     }
 

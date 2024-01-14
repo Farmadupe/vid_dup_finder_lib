@@ -159,7 +159,9 @@ impl image::GenericImageView for RgbImageAsGray {
         self.0.dimensions()
     }
 
+    #[warn(deprecated)]
     fn bounds(&self) -> (u32, u32, u32, u32) {
+        #[allow(deprecated)]
         self.0.bounds()
     }
 

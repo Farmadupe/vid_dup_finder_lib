@@ -88,14 +88,12 @@ impl MatchGroup {
     /// paired with the reference.
     #[must_use]
     pub fn dup_combinations(&self) -> Vec<Self> {
-        use std::iter::once;
-
         match &self.reference {
             Some(ref r) => self
                 .duplicates
                 .iter()
                 .cloned()
-                .map(|dup| Self::new_with_reference(r.clone(), once(dup)))
+                .map(|dup| Self::new_with_reference(r.clone(), std::iter::once(dup)))
                 .collect(),
 
             None => self
@@ -106,10 +104,6 @@ impl MatchGroup {
                 .map(|(h1, h2)| Self::new([h1, h2]))
                 .collect(),
         }
-    }
-
-    pub fn max_distance(&self) -> u64 {
-        todo!()
     }
 }
 

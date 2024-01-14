@@ -1,4 +1,6 @@
-use crate::*;
+
+
+use crate::{VideoHash, MatchGroup};
 
 use super::search_algorithm::Search;
 
@@ -14,6 +16,8 @@ pub fn search(hashes: impl IntoIterator<Item = VideoHash>, tolerance: f64) -> Ve
 
 /// Search new_hashes for all videos that are duplicates of videos in ref_hashes. Returns a set of groups,
 /// one group for each reference video that was matched.
+/// # Panics
+/// Should only panic due to internal implementation error
 pub fn search_with_references(
     ref_hashes: impl IntoIterator<Item = VideoHash>,
     new_hashes: impl IntoIterator<Item = VideoHash>,

@@ -452,7 +452,7 @@ impl GuiState {
         let default_zoom_state = ZoomState::new(50, 2000, 50, 50);
 
         let current_entry = GuiEntryState::new(
-            thunks.get(0).unwrap().clone(),
+            thunks.first().unwrap().clone(),
             single_mode,
             ThumbChoice::Video,
             default_zoom_state,

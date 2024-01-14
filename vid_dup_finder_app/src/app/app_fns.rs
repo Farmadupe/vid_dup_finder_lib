@@ -128,6 +128,7 @@ fn run_app_inner(cfg: &AppCfg) -> Result<Vec<AppError>, AppError> {
     Ok(nonfatal_errs)
 }
 
+#[allow(clippy::print_stdout)]
 fn do_app_outputs(
     cfg: &AppCfg,
     mut search_output: SearchOutput,
@@ -436,26 +437,29 @@ fn search_disk(
             match_db_coalesce_start.elapsed().as_secs_f64()
         );
 
-        println!(
-            "There were {num_groups_pre_filter} groups pre filtering and {} groups after.",
-            search_output.len(),
-        );
+        #[allow(clippy::print_stdout)]
+        {
+            println!(
+                "There were {num_groups_pre_filter} groups pre filtering and {} groups after.",
+                search_output.len(),
+            );
 
-        println!(
-            "Search failed to find {} groups in the match_db",
-            num_db_matches as isize - num_groups_pre_filter as isize
-        );
+            println!(
+                "Search failed to find {} groups in the match_db",
+                num_db_matches as isize - num_groups_pre_filter as isize
+            );
 
-        if cfg.matchdb_cfg.remove_known_matches {
-            println!("Removed {num_confirmed_removed} already-known matches.");
-        }
+            if cfg.matchdb_cfg.remove_known_matches {
+                println!("Removed {num_confirmed_removed} already-known matches.");
+            }
 
-        if cfg.matchdb_cfg.remove_falsepos {
-            println!("Removed {num_falsepos_removed} false positive matches.");
-        }
+            if cfg.matchdb_cfg.remove_falsepos {
+                println!("Removed {num_falsepos_removed} false positive matches.");
+            }
 
-        if cfg.matchdb_cfg.remove_unknown_matches {
-            println!("Removed {num_unconfirmed_removed} unconfirmed matches.");
+            if cfg.matchdb_cfg.remove_unknown_matches {
+                println!("Removed {num_unconfirmed_removed} unconfirmed matches.");
+            }
         }
 
         search_output

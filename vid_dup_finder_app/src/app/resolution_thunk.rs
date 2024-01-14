@@ -24,7 +24,6 @@ fn with_basename(recipient: &Path, donor: &Path) -> PathBuf {
 }
 
 #[derive(Error, Debug)]
-
 pub enum TrashError {
     #[error("Gui Trash Path not supplied in command line arguments")]
     NoTrashPathError,
@@ -430,7 +429,7 @@ impl ResolutionThunk {
 
         let new_path = self.get_trash_path(old_path)?;
 
-        println!("  trashing {}", old_path.display());
+        debug!("  trashing {}", old_path.display());
 
         if is_already_trashed(old_path, &new_path)? {
             delete_path(old_path)?;
@@ -443,7 +442,7 @@ impl ResolutionThunk {
 }
 
 fn delete_path(path: &Path) -> Result<(), TrashError> {
-    println!("      Deleting {}", path.display());
+    debug!("      Deleting {}", path.display());
 
     if let Err(e) = std::fs::remove_file(path) {
         let e = DeleteFileFailure(path.to_string_lossy().to_string(), e);
@@ -454,7 +453,7 @@ fn delete_path(path: &Path) -> Result<(), TrashError> {
 }
 
 fn move_path(source: &Path, dest: &Path) -> Result<(), TrashError> {
-    println!(
+    debug!(
         "      Moving {} ------> {}",
         source.display(),
         dest.display()
@@ -483,7 +482,7 @@ fn move_path(source: &Path, dest: &Path) -> Result<(), TrashError> {
         match e.raw_os_error() {
             Some(libc::EPERM | libc::EXDEV) => {
                 //try copy and delete.
-                println!("    Unable to move. Performing copy and delete instead.");
+                debug!("    Unable to move. Performing copy and delete instead.");
                 match std::fs::copy(source, &dest) {
                     Ok(_) => delete_path(source)?,
                     Err(_e) => {

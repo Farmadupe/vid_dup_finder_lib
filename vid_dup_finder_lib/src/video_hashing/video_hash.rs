@@ -18,7 +18,7 @@ use crate::{
         VID_HASH_DURATION,
     },
     video_hashing::dct_3d::Dct3d,
-    *,
+    HashCreationErrorKind,
 };
 
 use ffmpeg_gst_wrapper::ffmpeg_gst;
@@ -51,7 +51,7 @@ pub const DEFAULT_HASH_CREATION_OPTIONS: HashCreationOptions = HashCreationOptio
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 pub struct VideoHash {
     //#[serde(with = "BigArray")]
-    hash: [u64; HASH_QWORDS],
+    hash: [u64; HASH_QWORDS as usize],
     src_path: PathBuf,
     duration: u32,
 }
@@ -59,7 +59,7 @@ pub struct VideoHash {
 impl Default for VideoHash {
     fn default() -> Self {
         Self {
-            hash: [0; HASH_QWORDS],
+            hash: [0; HASH_QWORDS as usize],
             src_path: PathBuf::new(),
             duration: Default::default(),
         }
@@ -70,32 +70,59 @@ impl VideoHash {
     ///Create a `VideoHash` from the video file at src_path, using default options.
     /// * Returns the hash itself if successful, otherwise
     /// * an error with the reason that the hash could not be created.
+    /// # Errors
+    /// Returns `Err` if the video file does not exist, is not a video, is too short, or has no video frames.
+    /// # Panics
+    /// Should only panic due to internal implementation error
     pub fn from_path(src_path: impl AsRef<Path>) -> Result<Self, HashCreationErrorKind> {
         Self::from_path_with_options(src_path, DEFAULT_HASH_CREATION_OPTIONS)
     }
 
     /// Create a VideoHash with the given options. Only use this function if the default options
     /// do not work for you.
+    ///
+    /// # Errors
+    /// Returns `Err` if the video file does not exist, is not a video, is too short, or has no video frames.
+    ///
+    /// # Panics
+    /// Should only panic due to internal implementation error
     pub fn from_path_with_options(
         src_path: impl AsRef<Path>,
         opts: HashCreationOptions,
     ) -> Result<Self, HashCreationErrorKind> {
         let src_path = src_path.as_ref().to_path_buf();
-        let dct_size = NonZeroU32::try_from(DCT_SIZE as u32).unwrap();
+        let dct_size = NonZeroU32::try_from(DCT_SIZE).expect("will not be nonzero");
         //println!("{src_path:?}");
 
-        let iterate_frames =
-            || Self::iterate_video_frames_inner(&src_path, opts.skip_forward_amount);
+        //iterate the frames of a video file
+        //also checks that there is at least one frame and bails early if there isn't
+        let iterate_frames = || {
+            let mut it =
+                Self::iterate_video_frames_inner(&src_path, opts.skip_forward_amount)?.peekable();
+
+            if it.peek().is_none() {
+                return Err(HashCreationErrorKind::NoFrames {
+                    src_path: src_path.clone(),
+                });
+            }
+
+            Ok(it)
+        };
 
         //Before generating the hash, if requested we detect black bands around the edges of the video
         //frames, which will be discarded before generating the hash.
-
-        let crop = match opts.cropdetect {
-            CropdetectType::NoCrop => Self::detect_noletterbox_crop(iterate_frames()?)?,
-            CropdetectType::Letterbox => {
-                Self::detect_letterbox_crop(iterate_frames()?, opts.cropdetect)?
+        let crop = if cfg!(any()) {
+            let frames = iterate_frames()?.take(64).collect::<Vec<_>>();
+            match opts.cropdetect {
+                CropdetectType::NoCrop => Self::detect_noletterbox_crop(frames.iter()),
+                CropdetectType::Letterbox => Self::detect_letterbox_crop(frames.iter()),
             }
-        }.ok_or(HashCreationErrorKind::Other)?;
+        } else {
+            match opts.cropdetect {
+                CropdetectType::NoCrop => Self::detect_noletterbox_crop(iterate_frames()?),
+                CropdetectType::Letterbox => Self::detect_letterbox_crop(iterate_frames()?),
+            }
+        };
 
         let dct = {
             let frames_64x64 = iterate_frames()?
@@ -105,18 +132,18 @@ impl VideoHash {
         };
 
         // Pack the raw bits of the hash into a bit vector.
-        let mut bitarr: BitArray<[u64; HASH_QWORDS], Lsb0> = BitArray::ZERO;
-        assert!(bitarr.len() >= HASH_BITS);
+        let mut bitarr: BitArray<[u64; HASH_QWORDS as usize], Lsb0> = BitArray::ZERO;
+        assert!(bitarr.len() >= HASH_BITS as usize);
         for (mut bitarr_val, hash_bit) in bitarr.iter_mut().zip(dct.hash_bits()) {
             *bitarr_val = hash_bit;
         }
 
         //build the rest of the hash.
-        let duration = duration(&src_path)
-            .ok_or_else(|| HashCreationErrorKind::NotVideo(src_path.to_path_buf()))?
-            .as_secs();
+        let duration_secs = duration(&src_path)
+            .ok_or_else(|| HashCreationErrorKind::NotVideo(src_path.clone()))?
+            .as_secs() as u32;
 
-        let hash = Self::from_components(src_path, bitarr, duration as u32);
+        let hash = Self::from_components(src_path, bitarr, duration_secs);
 
         Ok(hash)
     }
@@ -149,38 +176,43 @@ impl VideoHash {
     }
 
     fn detect_noletterbox_crop(
-        mut frames: impl Iterator<Item = VideoFrameGrayUnified>,
-    ) -> Result<Option<Crop>, HashCreationErrorKind> {
-        let dimensions = frames.next().map(|f| f.dimensions()).ok_or(HashCreationErrorKind::Other)?;
+        mut frames: impl Iterator<Item = impl AsRef<VideoFrameGrayUnified>>,
+    ) -> Crop {
+        let dimensions = frames
+            .next()
+            .map(|f| f.as_ref().dimensions())
+            .expect("we always have at least one frame");
 
-        Ok(Some(Crop::new(dimensions, 0, 0, 0, 0)))
+        Crop::new(dimensions, 0, 0, 0, 0)
     }
 
     fn detect_letterbox_crop(
-        frames: impl Iterator<Item = VideoFrameGrayUnified>,
-        crop_type: CropdetectType,
-    ) -> Result<Option<Crop>, HashCreationErrorKind> {
+        frames: impl Iterator<Item = impl AsRef<VideoFrameGrayUnified>>,
+    ) -> Crop {
+        // Given an existing crop and another video frame, return the union of that crop
+        // and the frame's detected letterboxing.
+        fn add_letterbox_crop_frame(
+            crop: Option<Crop>,
+            frame: impl AsRef<VideoFrameGrayUnified>,
+        ) -> Option<Crop> {
+            let this_frame_crop = frame
+                .as_ref()
+                .letterbox_crop(LetterboxColour::AnyColour(16));
+
+            let updated_crop = match crop {
+                None => this_frame_crop,
+                Some(crop) => crop.union(&this_frame_crop),
+            };
+
+            Some(updated_crop)
+        }
+
         // we don't need all of the frames to detect the crop. (this isn't a huge speedup because gstreamer still
         // decodes every frame)
         let frames = frames.step_by(8).take(8);
 
-        // Given an existing crop and another video frame, return the union of that crop
-        // and the frame's detected letterboxing.
-        let add_letterbox_crop_frame = |crop: Option<Crop>, frame: VideoFrameGrayUnified| {
-            let this_frame_crop = frame.letterbox_crop(LetterboxColour::AnyColour(16));
-            match crop {
-                Some(crop) => Some(crop.union(&this_frame_crop)),
-                None => Some(this_frame_crop),
-            }
-        };
-
-        match crop_type {
-            CropdetectType::NoCrop => Ok(None), // should be unreachable.
-            CropdetectType::Letterbox => {
-                let ret = frames.fold(None, add_letterbox_crop_frame);
-                Ok(ret)
-            }
-        }
+        let ret = frames.fold(None, add_letterbox_crop_frame);
+        ret.expect("we always have at least one frame")
     }
 
     /// utility helper -- Build a gstreamer frame reader with the correct
@@ -201,6 +233,8 @@ impl VideoHash {
             .ok_or_else(|| HashCreationErrorKind::NotVideo(src_path.to_path_buf()))?
             .as_secs_f64();
 
+        //println!("duration: {vid_duration}");
+
         let max_seek_amount = skip_forward_amount;
         let max_hash_duration = VID_HASH_DURATION;
 
@@ -214,6 +248,7 @@ impl VideoHash {
         // But don't sweat over this corner because for degernerately short videos
         // a duplicate-image utility might work just as well instead.
         if vid_duration < 2.0 {
+            //println!("sub 2 sec");
             fps = 64.0;
             seek_amount = 0f64;
 
@@ -224,6 +259,7 @@ impl VideoHash {
         //the last frame be 2 seconds before the end. Otherwise sometimes we only
         //get 63 frames.)
         } else if vid_duration < max_hash_duration {
+            //println!("sub {max_hash_duration} sec");
             fps = 64.0 / (vid_duration - 2.0);
             seek_amount = 0f64;
 
@@ -231,11 +267,14 @@ impl VideoHash {
         //to build the hash, but not long enough that we can apply the full skip,
         //then skip forwards as far as possible.
         } else if vid_duration < max_seek_amount + max_hash_duration {
+            //println!("sub {} sec", max_seek_amount + max_hash_duration);
+
             fps = 64.0 / max_hash_duration;
             seek_amount = vid_duration - max_hash_duration - 2.0;
 
         //Otherwise the video is long enough to do what we want.
         } else {
+            //println!("more than {} sec", max_seek_amount + max_hash_duration);
             fps = 64.0 / max_hash_duration;
             seek_amount = max_seek_amount;
         }
@@ -246,6 +285,7 @@ impl VideoHash {
 
         //Spawn gstreamer pipeline to begin getting video frames.
         let mut builder = FrameReaderCfgUnified::from_path(src_path);
+        //println!("calculated fps for capturing: {fps:?}, seek_amount: {seek_amount}");
         builder.fps(fps);
         if seek_amount > 0f64 {
             builder.start_offset(seek_amount);
@@ -256,7 +296,7 @@ impl VideoHash {
 
     fn from_components(
         src_path: impl AsRef<Path>,
-        hash_bits: BitArray<[u64; HASH_QWORDS], Lsb0>,
+        hash_bits: BitArray<[u64; HASH_QWORDS as usize], Lsb0>,
         duration: u32,
     ) -> Self {
         Self {
@@ -317,7 +357,7 @@ impl VideoHash {
         // slice with a non-multiple-of-the-raw-storage-size length
 
         let full_raw_slice = BitSlice::<u64, Lsb0>::from_slice(&self.hash);
-        let correct_size_slice = &full_raw_slice[..HASH_BITS];
+        let correct_size_slice = &full_raw_slice[..HASH_BITS as usize];
 
         correct_size_slice.iter().by_vals()
     }
@@ -326,18 +366,18 @@ impl VideoHash {
     /// that produced the hash. The resulting image may be recognizable.
     #[must_use]
     pub fn reconstructed_frames(&self) -> Vec<image::RgbImage> {
-        video_hashing::dct_3d::Dct3d::image_from_video_hash(self)
+        Dct3d::image_from_video_hash(self)
     }
 
     #[must_use]
     pub const fn hash_frame_dimensions() -> (usize, usize) {
         use crate::definitions::HASH_SIZE;
-        (HASH_SIZE, HASH_SIZE)
+        (HASH_SIZE as usize, HASH_SIZE as usize)
     }
 
     #[must_use]
     pub fn hash_bits(&self) -> &BitSlice<u64, Lsb0> {
-        &BitSlice::from_slice(&self.hash)[..HASH_BITS]
+        &BitSlice::from_slice(&self.hash)[..HASH_BITS as usize]
     }
 }
 
@@ -376,7 +416,7 @@ pub mod test_util {
         }
 
         pub fn full_hash(name: impl AsRef<Path>) -> Self {
-            Self::from_components(name, BitArray::new([u64::MAX; HASH_QWORDS]), 0)
+            Self::from_components(name, BitArray::new([u64::MAX; HASH_QWORDS as usize]), 0)
         }
 
         pub fn empty_hash(name: impl AsRef<Path>) -> Self {
@@ -410,8 +450,8 @@ pub mod test_util {
         fn random_hash_inner(rng: &mut StdRng) -> Self {
             use std::path::PathBuf;
 
-            let mut hash: BitArray<[u64; HASH_QWORDS], Lsb0> = BitArray::ZERO;
-            for mut bit in hash.iter_mut().take(HASH_BITS) {
+            let mut hash: BitArray<[u64; HASH_QWORDS as usize], Lsb0> = BitArray::ZERO;
+            for mut bit in hash.iter_mut().take(HASH_BITS as usize) {
                 *bit = rng.gen_bool(0.5);
             }
 
@@ -422,6 +462,15 @@ pub mod test_util {
             }
         }
     }
+}
+
+//Utility helper: Get the hamming distance between two bitstrings.
+fn hamming_distance<const N: usize>(x: &[u64; N], y: &[u64; N]) -> u32 {
+    x.iter().zip(y.iter()).fold(0, |acc, (x, y)| {
+        let difference = x ^ y;
+        let set_bits = difference.count_ones();
+        acc + set_bits
+    })
 }
 
 #[cfg(test)]
@@ -477,13 +526,4 @@ mod test {
             );
         }
     }
-}
-
-//Utility helper: Get the hamming distance between two bitstrings.
-fn hamming_distance<const N: usize>(x: &[u64; N], y: &[u64; N]) -> u32 {
-    x.iter().zip(y.iter()).fold(0, |acc, (x, y)| {
-        let difference = x ^ y;
-        let set_bits = difference.count_ones();
-        acc + set_bits
-    })
 }

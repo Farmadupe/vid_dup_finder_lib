@@ -10,10 +10,10 @@ pub const DEFAULT_VID_HASH_SKIP_FORWARD: f64 = 30.0;
 
 //tweakable. Number of frames that the 3d DCT is performed on. Higher numbers extend hashing time
 // but (hopefully) makes hashes more robust to small time offsets.
-pub const DCT_SIZE: usize = 64;
+pub const DCT_SIZE: u32 = 64;
 
 // Hash definitions
-pub const HASH_SIZE: usize = 8; //number of images
+pub const HASH_SIZE: u32 = 8; //number of images
 
 /// A good starting tolerance to use when searching for videos.
 /// You can use a lower tolerance if you are getting too many false positives,
@@ -24,7 +24,7 @@ pub const DEFAULT_SEARCH_TOLERANCE: f64 = 0.30;
 pub const TOLERANCE_SCALING_FACTOR: f64 = (HASH_SIZE.pow(3)) as f64;
 
 //Same as nightly's usize::unstable_div_ceil
-const fn calc_qwords(num_bits: usize) -> usize {
+const fn calc_qwords(num_bits: u32) -> u32 {
     let divisor = num_bits / 64;
     let remainder = num_bits % 64;
     if remainder == 0 {
@@ -34,8 +34,8 @@ const fn calc_qwords(num_bits: usize) -> usize {
     }
 }
 
-pub const HASH_BITS: usize = HASH_SIZE.pow(3);
-pub const HASH_QWORDS: usize = calc_qwords(HASH_BITS);
+pub const HASH_BITS: u32 = HASH_SIZE.pow(3);
+pub const HASH_QWORDS: u32 = calc_qwords(HASH_BITS);
 
 //Whether to exclude black bars from the edges of videos
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, enum_utils::FromStr)]

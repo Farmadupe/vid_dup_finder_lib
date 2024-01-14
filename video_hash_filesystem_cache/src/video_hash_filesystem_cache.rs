@@ -225,7 +225,15 @@ impl VideoHashFilesystemCache {
         // and add what's new.
         #[cfg(feature = "parallel_loading")]
         {
-            let errs = all_paths.into_par_iter().filter_map(|path| {
+            let mut all_paths = all_paths.into_iter().collect::<Vec<_>>();
+            all_paths.sort_by_cached_key(|x| {
+                let k1 = x.extension().unwrap_or_default().to_owned();
+                let k2 = x.to_owned();
+
+                (k1, k2)
+            });
+
+            let errs = all_paths.into_iter().par_bridge().filter_map(|path| {
                 if force_load {
                     self.force_update(&path).err()
                 } else {

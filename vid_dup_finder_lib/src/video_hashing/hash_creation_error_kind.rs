@@ -20,6 +20,6 @@ pub enum HashCreationErrorKind {
         error: ffmpeg_gst::FfmpegGstError,
     },
 
-    #[error("Video Processing Error")]
-    Other,
+    #[error("Could not extract any frames from video at {src_path}")]
+    NoFrames { src_path: PathBuf },
 }

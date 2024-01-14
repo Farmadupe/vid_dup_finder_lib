@@ -11,11 +11,10 @@ pub fn main() {
 
 #[test]
 fn test() {
-    unimplemented!()
-    //inner()
+    inner()
 }
 
-fn _inner() {
+fn inner() {
     let cat_vids = &[
         "examples/vids/cat.1.mp4",
         "examples/vids/cat.2.mp4",

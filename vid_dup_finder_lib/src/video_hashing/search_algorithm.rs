@@ -170,13 +170,13 @@ impl Search {
         }
     }
 
-    fn duration_slice(&mut self, duration: u32) -> &mut [Entry] {
-        let lhs_duration = (f64::from(duration) * 0.95) as u32;
+    fn duration_slice(&mut self, duration_secs: u32) -> &mut [Entry] {
+        let lhs_duration = (f64::from(duration_secs) * 0.95) as u32;
         let lhs = self
             .entries
             .partition_point(|entry| entry.value.duration() < lhs_duration);
 
-        let rhs_duration = (f64::from(duration) * 1.05) as u32;
+        let rhs_duration = (f64::from(duration_secs) * 1.05) as u32;
         let rhs = self
             .entries
             .partition_point(|entry| entry.value.duration() <= rhs_duration);

@@ -59,9 +59,9 @@ fn grid_images_with_text(images: &[(String, Vec<RgbImage>)]) -> Result<RgbImage,
     let font = rusttype::Font::try_from_bytes(include_bytes!("font/NotoSans-Regular.ttf")).unwrap();
 
     let (first_src_path, first_row) = images
-        .get(0)
+        .first()
         .ok_or_else(|| "grid_images failed: No images were supplied".to_string())?;
-    let first_img = first_row.get(0).ok_or_else(|| {
+    let first_img = first_row.first().ok_or_else(|| {
         format!("grid_images failed: No images were supplied for {first_src_path}",)
     })?;
     let (img_x, img_y) = first_img.dimensions();

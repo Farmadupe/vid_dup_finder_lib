@@ -46,10 +46,10 @@ fn inner() {
     // Get hashes from the videos. Hopefully there will be no errors
     // but if there are, print them to screen.
     let hashes: Vec<VideoHash> = all_vids
-        .filter_map(|ref fname| {
+        .map(|ref fname| {
             println!("Loading {}", fname.to_string_lossy());
             match VideoHash::from_path(fname) {
-                Ok(hash) => Some(hash),
+                Ok(hash) => hash,
                 Err(e) => {
                     println!(
                         "failed to create hash from {}. Error: {}.",

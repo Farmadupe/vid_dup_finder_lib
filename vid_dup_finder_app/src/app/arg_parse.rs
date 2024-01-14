@@ -174,7 +174,7 @@ fn build_app() -> clap::Command {
             .help("File extensions to be excluded from searches. When specified the default file exclusion extensions will be replaced with the given values. Extensions must be comma separated with no spaces, e.g '--exclude-exts ext1,ext2,ext3'")
             .value_delimiter(',')
             .action(Append)
-            .default_value("png,jpg,bmp,jpeg,txt,text,db,gif,rb,py,mp3,wma,ogg,db,flac,zip,rar,7z,pdf,htm,html,xls,doc,ppt,odt,ods,docx,xlsx,rtf,log")
+            .default_value("png,jpg,bmp,jpeg,txt,text,db,gif,rb,py,mp3,wma,ogg,db,flac,zip,rar,7z,pdf,htm,html,xls,doc,ppt,odt,ods,docx,xlsx,rtf,log,trashinfo,js,css,py,rs,aac")
             .display_order(get_ordering(EXCL_EXTS)),
     );
 
