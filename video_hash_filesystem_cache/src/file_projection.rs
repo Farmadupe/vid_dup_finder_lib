@@ -1,3 +1,7 @@
+#![warn(clippy::panic)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use std::{
     collections::{hash_map::RandomState, HashSet},
     ffi::{OsStr, OsString},
@@ -93,8 +97,7 @@ impl FileProjection {
             .filter(excl_path_is_used)
             .collect::<Vec<_>>();
 
-        //check that the same path does not appear in srcs and excls
-
+        //check that the same path does not appear in srcs and excls        
         for src_path in &src_paths {
             for excl_path in &excl_paths {
                 if src_path == excl_path {
@@ -143,17 +146,6 @@ impl FileProjection {
 
     /// Visit the filesystem to get all child files which are a child of any of Self::src_paths,
     /// and which are not a child of Self::excl_paths.
-    ///
-    /// # Return values
-    /// Returns Err() if any path in Self::src_paths or Self::excl_paths cannot be read from
-    /// the filesystem.
-    ///
-    /// Otherwise returns Ok() containing a list of all other errors encountered while retrieving
-    /// paths from the filesystem.
-    ///
-    /// # Panics
-    /// This function will panic if either project_using_fs or project_using_list
-    /// has already been called.
     pub fn project_using_fs(
         &mut self,
     ) -> impl Iterator<Item = Result<FileProjectionError, FileProjectionError>> {
@@ -209,10 +201,6 @@ impl FileProjection {
     }
 
     /// Enumerate files by filtering a list of paths.
-    ///
-    /// # Panics
-    /// This function will panic if either project_using_fs or project_using_list
-    /// has already been called.
     pub fn project_using_list(&mut self, list: impl IntoIterator<Item = impl AsRef<Path>>) {
         self.projected_files = list
             .into_iter()
@@ -223,9 +211,6 @@ impl FileProjection {
 
     /// Obtain the set of all enumerated files. File enumeration must have already
     /// taken place.
-    ///
-    /// # Panics
-    /// This function will panic if enumeration has not occurred.
     pub fn projected_files(&self) -> impl Iterator<Item = &Path> {
         self.projected_files.iter().map(|p| p.as_path())
     }

@@ -112,6 +112,7 @@ impl VideoHash {
         //Before generating the hash, if requested we detect black bands around the edges of the video
         //frames, which will be discarded before generating the hash.
         let crop = if cfg!(any()) {
+            //110139.65user 6480.44system 2:05:54elapsed 1543%CPU (0avgtext+0avgdata 12725676maxresident)k
             let frames = iterate_frames()?.take(64).collect::<Vec<_>>();
             match opts.cropdetect {
                 CropdetectType::NoCrop => Self::detect_noletterbox_crop(frames.iter()),
@@ -426,17 +427,17 @@ pub mod test_util {
         //generate a set of temporal hashes, each with a given distance from the empty hash.
         #[must_use]
         pub fn hash_with_spatial_distance(&self, target_distance: u32, rng: &mut StdRng) -> Self {
-            fn flip_a_bit(bits: &mut [u64], rng: &mut StdRng) {
+            let mut flip_a_bit = |bits: &mut [u64]| {
                 let chosen_qword = rng.gen_range(0..bits.len());
                 let chosen_bit = rng.gen_range(0..64);
                 bits[chosen_qword] ^= 2u64.pow(chosen_bit);
-            }
+            };
 
             //flip bits until the required distance is reached
             let mut ret_hash = self.clone();
             let mut curr_distance = self.hamming_distance(&ret_hash);
             while curr_distance < target_distance {
-                flip_a_bit(&mut ret_hash.hash, rng);
+                flip_a_bit(&mut ret_hash.hash);
                 curr_distance = self.hamming_distance(&ret_hash);
             }
             assert!(self.hamming_distance(&ret_hash) == target_distance);
@@ -444,10 +445,6 @@ pub mod test_util {
         }
 
         pub fn random_hash(rng: &mut StdRng) -> Self {
-            Self::random_hash_inner(rng)
-        }
-
-        fn random_hash_inner(rng: &mut StdRng) -> Self {
             use std::path::PathBuf;
 
             let mut hash: BitArray<[u64; HASH_QWORDS as usize], Lsb0> = BitArray::ZERO;

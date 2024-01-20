@@ -13,7 +13,13 @@ fn media_info(uri: impl AsRef<str>) -> Result<DiscovererInfo, glib::Error> {
 /// if the file contains no video streams.
 pub fn duration(uri: impl AsRef<str>) -> Result<Option<std::time::Duration>, glib::Error> {
     //First find out if the file is actually a media file
-    let info = media_info(uri.as_ref())?;
+    let info = match media_info(uri.as_ref()) {
+        Ok(info) => info,
+        Err(e) => {
+            println!("{e:?}");
+            return Err(e);
+        },
+    };
 
     //Find out if the media file is actually a video file
     if info.video_streams().is_empty() {

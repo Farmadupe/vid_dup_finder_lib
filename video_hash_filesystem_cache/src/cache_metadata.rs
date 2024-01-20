@@ -1,3 +1,4 @@
+use cfg_if::cfg_if;
 use std::str::FromStr;
 
 use vid_dup_finder_lib::CropdetectType;
@@ -57,11 +58,13 @@ impl VdfCacheMetadata {
         #[cfg(target_family = "unix")]
         let operating_system = OperatingSystem::Unix;
 
-        #[cfg(feature = "ffmpeg_backend")]
-        let decode_backend = DecodeBackend::FfmpegBackend;
-
-        #[cfg(feature = "gstreamer_backend")]
-        let decode_backend = DecodeBackend::GstreamerBackend;
+        cfg_if! {
+            if #[cfg(feature = "gstreamer_backend")] {
+                let decode_backend = DecodeBackend::GstreamerBackend;
+            } else if #[cfg(feature = "ffmpeg_backend")] {
+                let decode_backend = DecodeBackend::FfmpegBackend;
+            }
+        };
 
         let cache_version = 1;
 

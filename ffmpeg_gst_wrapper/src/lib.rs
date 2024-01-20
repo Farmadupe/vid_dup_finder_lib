@@ -1,7 +1,7 @@
 use cfg_if::cfg_if;
 
-#[cfg(all(feature = "ffmpeg_backend", feature = "gstreamer_backend"))]
-compile_error!("feature \"ffmpeg_backend\" and feature \"gstreamer_backend\" cannot be enabled at the same time");
+//#[cfg(all(feature = "ffmpeg_backend", feature = "gstreamer_backend"))]
+//compile_error!("feature \"ffmpeg_backend\" and feature \"gstreamer_backend\" cannot be enabled at the same time");
 
 #[cfg(feature = "gstreamer_backend")]
 pub mod gst_impl {
