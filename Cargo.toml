@@ -28,6 +28,7 @@ lto = "fat"
 incremental = false
 opt-level = 3
 panic = "abort"
+strip = "symbols"
 
 [profile.fastbuild]
 inherits = "release"

@@ -54,6 +54,10 @@ thiserror = "1.0"
 walkdir = "2"
 
 
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+jemallocator="0.5"
+
+
 
 
 # Gui

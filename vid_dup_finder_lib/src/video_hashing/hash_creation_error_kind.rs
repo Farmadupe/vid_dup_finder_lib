@@ -14,7 +14,7 @@ pub enum HashCreationErrorKind {
     NotVideo(PathBuf),
 
     /// Error occurred while processing video.
-    #[error("Video processing error at {src_path}: {error}")]
+    #[error("Video processing error at {src_path}: {error:#?}")]
     VideoProcessing {
         src_path: PathBuf,
         error: ffmpeg_gst::FfmpegGstError,

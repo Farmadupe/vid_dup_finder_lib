@@ -16,11 +16,19 @@ pub mod gst_impl {
     use std::{fmt::Display, path::Path};
 
     #[derive(Error, Debug, Clone, Serialize, Deserialize)]
-    pub struct FfmpegGstError(());
+    pub struct FfmpegGstError {
+        quark: String,
+        code: i32,
+        message: String,
+    }
 
     impl From<glib::Error> for FfmpegGstError {
-        fn from(_e: glib::Error) -> Self {
-            Self(())
+        fn from(e: glib::Error) -> Self {
+            Self {
+                quark: e.domain().as_str().to_string(),
+                code: unsafe { (*e.as_ptr()).code },
+                message: e.message().to_string(),
+            }
         }
     }
 
@@ -175,7 +183,7 @@ pub mod gst_impl {
         fn next(&mut self) -> Option<Self::Item> {
             match self.0.next() {
                 Some(Ok(frame)) => Some(Ok(VideoFrameGrayUnified(frame))),
-                Some(Err(_e)) => Some(Err(FfmpegGstError(()))),
+                Some(Err(e)) => Some(Err(FfmpegGstError::from(e))),
                 None => None,
             }
         }
@@ -189,7 +197,7 @@ pub mod gst_impl {
         fn next(&mut self) -> Option<Self::Item> {
             match self.0.next() {
                 Some(Ok(frame)) => Some(Ok(VideoFrameRgbUnified(frame))),
-                Some(Err(_e)) => Some(Err(FfmpegGstError(()))),
+                Some(Err(e)) => Some(Err(FfmpegGstError::from(e))),
                 None => None,
             }
         }

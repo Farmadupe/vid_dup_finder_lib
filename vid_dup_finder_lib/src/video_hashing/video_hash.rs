@@ -111,7 +111,7 @@ impl VideoHash {
 
         //Before generating the hash, if requested we detect black bands around the edges of the video
         //frames, which will be discarded before generating the hash.
-        let crop = if cfg!(any()) {
+        let crop = if cfg!(all()) {
             //110139.65user 6480.44system 2:05:54elapsed 1543%CPU (0avgtext+0avgdata 12725676maxresident)k
             let frames = iterate_frames()?.take(64).collect::<Vec<_>>();
             match opts.cropdetect {

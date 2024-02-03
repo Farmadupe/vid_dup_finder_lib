@@ -16,7 +16,7 @@ pub fn duration(uri: impl AsRef<str>) -> Result<Option<std::time::Duration>, gli
     let info = match media_info(uri.as_ref()) {
         Ok(info) => info,
         Err(e) => {
-            println!("{e:?}");
+            //println!("{e:?}");
             return Err(e);
         },
     };

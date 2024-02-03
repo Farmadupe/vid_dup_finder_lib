@@ -20,12 +20,14 @@ extern crate log;
 #[cfg(all(target_family = "unix", feature = "gui"))]
 extern crate lazy_static;
 
-// #[cfg(not(target_env = "msvc"))]
-// use jemallocator::Jemalloc;
-//
-// #[cfg(not(target_env = "msvc"))]
-// #[global_allocator]
-// static GLOBAL: Jemalloc = Jemalloc;
+#[cfg(not(target_env = "msvc"))]
+use jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
+
 
 mod app;
 

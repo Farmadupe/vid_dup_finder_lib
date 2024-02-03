@@ -73,7 +73,7 @@ fn run_app_inner(cfg: &AppCfg) -> Result<Vec<AppError>, AppError> {
     let cache_load_start = Instant::now();
 
     //load up existing hashes from disk.
-    let cache_save_threshold = 500;
+    let cache_save_threshold = 100;
     let cache = VideoHashFilesystemCache::new(
         cache_save_threshold,
         cfg.cache_cfg.cache_path.as_ref().unwrap().clone(),
@@ -91,10 +91,34 @@ fn run_app_inner(cfg: &AppCfg) -> Result<Vec<AppError>, AppError> {
     // If any ref_path is a child of any cand_path, add it as an excl of cand_paths. This allows ref_paths to be located
     // in subdirs of cand_paths.
     let cand_excls = excl_dirs.iter().chain(ref_dirs);
-    let mut cands = FileProjection::new(cand_dirs, cand_excls, excl_exts).map_err(err_map_cand)?;
+    let mut cands = match FileProjection::new(cand_dirs, cand_excls, excl_exts) {
+        Ok(x) => x,
+        Err(FileProjectionError::SrcPathExcluded {
+            src_path,
+            excl_path,
+        }) => {
+            return Err(AppError::SrcPathExcludedError {
+                src_path,
+                excl_path,
+            })
+        }
+        Err(_) => unreachable!(),
+    };
 
     let ref_excls = excl_dirs.iter().chain(cand_dirs);
-    let mut refs = FileProjection::new(ref_dirs, ref_excls, excl_exts).map_err(err_map_ref)?;
+    let mut refs = match FileProjection::new(ref_dirs, ref_excls, excl_exts) {
+        Ok(x) => x,
+        Err(FileProjectionError::SrcPathExcluded {
+            src_path,
+            excl_path,
+        }) => {
+            return Err(AppError::RefPathExcludedError {
+                src_path,
+                excl_path,
+            })
+        }
+        Err(_) => unreachable!(),
+    };
 
     // Update the cache file with all videos specified by --files and --with-refs
     if !cfg.cache_cfg.no_update_cache {
@@ -230,16 +254,24 @@ fn do_app_outputs(
     ////////////////////////////////////////////////////////////////////////////
     // Gui output
     ////////////////////////////////////////////////////////////////////////////
-    #[cfg(all(target_family = "unix", feature = "gui"))]
     match &cfg.output_cfg.gui {
         super::app_cfg::GuiOutputCfg::NoGui => (),
         super::app_cfg::GuiOutputCfg::Gui {
             sorting,
             trash_path,
         } => {
-            search_output.sort(*sorting);
-            let thunks = search_output.resolution_thunks(&_cache, trash_path.as_deref());
-            run_gui(thunks)?;
+            #[cfg(all(target_family = "unix", feature = "gui"))]
+            {
+                search_output.sort(*sorting);
+                let thunks = search_output.resolution_thunks(&_cache, trash_path.as_deref());
+                run_gui(thunks)?;
+            }
+            #[cfg(not(all(target_family = "unix", feature = "gui")))]
+            {
+                let _ = sorting;
+                let _ = trash_path;
+                panic!("GUI not available");
+            }
         }
     }
     Ok(())
@@ -629,22 +661,41 @@ fn update_hash_cache(
     #[cfg(feature = "print_timings")]
     let cache_update_start = Instant::now();
 
-    //get loading paths from candidates
-    let mapping = |res, cand_ref| match res {
-        Ok(e) => Ok(err_map(e, cand_ref)),
-        Err(e) => Err(err_map(e, cand_ref)),
+    use AppError as Ae;
+    use FileProjectionError as Fpe;
+
+    let cand_projection_errs = match cands.project_using_fs() {
+        Ok(recoverable_errs) => recoverable_errs,
+        Err(Fpe::SrcPathNotFound(paths)) => {
+            return Err(Ae::CandPathNotFoundError(paths));
+        }
+        Err(Fpe::ExclPathNotFound(paths)) => {
+            return Err(Ae::ExclPathNotFoundError(paths));
+        }
+        Err(_) => unreachable!(),
     };
 
-    let cand_projection_errs = cands
-        .project_using_fs()
-        .map(|outcome| mapping(outcome, CandRef::Cand));
+    let ref_projection_errs = match refs.project_using_fs() {
+        Ok(recoverable_errs) => recoverable_errs,
+        Err(Fpe::SrcPathNotFound(paths)) => {
+            return Err(Ae::RefPathNotFoundError(paths));
+        }
+        Err(Fpe::ExclPathNotFound(paths)) => {
+            return Err(Ae::ExclPathNotFoundError(paths));
+        }
+        Err(_) => unreachable!(),
+    };
 
-    let ref_projection_errs = refs
-        .project_using_fs()
-        .map(|outcome| mapping(outcome, CandRef::Ref));
-
-    for outcome in cand_projection_errs.chain(ref_projection_errs) {
-        nonfatal_errs.push(outcome?)
+    for recoverable_err in cand_projection_errs
+        .into_iter()
+        .chain(ref_projection_errs.into_iter())
+    {
+        match recoverable_err {
+            FileProjectionError::Enumeration(err_string) => {
+                nonfatal_errs.push(AppError::FileSearchError(err_string))
+            }
+            _ => unreachable!(),
+        }
     }
 
     let loading_paths = cands.projected_files().chain(refs.projected_files());
@@ -711,48 +762,4 @@ pub fn configure_logs(verbosity: ReportVerbosity) {
         ColorChoice::Auto,
     )
     .expect("TermLogger failed to initialize");
-}
-
-#[derive(Clone, Copy, Debug)]
-enum CandRef {
-    Cand,
-    Ref,
-}
-
-fn err_map(e: FileProjectionError, kind: CandRef) -> AppError {
-    use CandRef::*;
-    use FileProjectionError::*;
-    match kind {
-        Cand => match e {
-            PathNotFound(path) => AppError::CandPathNotFoundError(path),
-            ExclPathNotFound(path) => AppError::ExclPathNotFoundError(path),
-            Enumeration(e) => AppError::FileSearchError(e),
-            SrcPathExcluded {
-                src_path,
-                excl_path,
-            } => AppError::SrcPathExcludedError {
-                src_path,
-                excl_path,
-            },
-        },
-        Ref => match e {
-            PathNotFound(path) => AppError::RefPathNotFoundError(path),
-            ExclPathNotFound(path) => AppError::ExclPathNotFoundError(path),
-            Enumeration(e) => AppError::FileSearchError(e),
-            SrcPathExcluded {
-                src_path,
-                excl_path,
-            } => AppError::RefPathExcludedError {
-                src_path,
-                excl_path,
-            },
-        },
-    }
-}
-
-fn err_map_cand(e: FileProjectionError) -> AppError {
-    err_map(e, CandRef::Cand)
-}
-fn err_map_ref(e: FileProjectionError) -> AppError {
-    err_map(e, CandRef::Ref)
 }

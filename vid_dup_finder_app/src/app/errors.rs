@@ -36,14 +36,14 @@ pub enum AppError {
         excl_path: PathBuf,
     },
 
-    #[error("Path in --files not found: {0}")]
-    CandPathNotFoundError(PathBuf),
+    #[error("Path in --files not found: {0:?}")]
+    CandPathNotFoundError(Vec<PathBuf>),
 
-    #[error("Path in --with-refs not found: {0}")]
-    RefPathNotFoundError(PathBuf),
+    #[error("Path in --with-refs not found: {0:?}")]
+    RefPathNotFoundError(Vec<PathBuf>),
 
-    #[error("Path in --exclude not found: {0}")]
-    ExclPathNotFoundError(PathBuf),
+    #[error("Path in --exclude not found: {0:?}")]
+    ExclPathNotFoundError(Vec<PathBuf>),
 
     /////////////////////////////////
     //Other file projection problems
