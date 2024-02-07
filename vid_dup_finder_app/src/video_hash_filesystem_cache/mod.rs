@@ -78,19 +78,18 @@
 #![deny(clippy::print_stdout)]
 #![deny(clippy::print_stderr)]
 
-#[macro_use]
-extern crate log;
-
 pub(crate) mod cache_entry;
 pub(crate) mod cache_metadata;
 pub(crate) mod errors;
 pub(crate) mod file_projection;
 pub(crate) mod generic_cache_if;
+pub(crate) mod generic_filesystem_cache;
+#[allow(clippy::module_inception)]
 pub(crate) mod video_hash_filesystem_cache;
 
 //exports
-pub use crate::video_hash_filesystem_cache::VideoHashFilesystemCache;
+pub use self::video_hash_filesystem_cache::VideoHashFilesystemCache;
 pub use errors::VdfCacheError;
 pub use file_projection::FileProjection;
 pub use file_projection::FileProjectionError;
-pub use file_projection::FileProjectionOutcome;
+

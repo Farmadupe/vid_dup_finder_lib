@@ -28,6 +28,7 @@ use jemallocator::Jemalloc;
 static GLOBAL: Jemalloc = Jemalloc;
 
 mod app;
+mod video_hash_filesystem_cache;
 
 fn main() {
     vid_dup_finder_lib::init_gstreamer();

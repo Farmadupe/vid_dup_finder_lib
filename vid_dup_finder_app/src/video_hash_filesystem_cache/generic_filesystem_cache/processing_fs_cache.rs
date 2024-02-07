@@ -11,7 +11,7 @@ use super::{
     base_fs_cache::BaseFsCache,
     errors::{FsCacheErrorKind, FsCacheResult},
 };
-use crate::cache_interface::CacheInterface;
+use super::cache_interface::CacheInterface;
 
 /// How a file on disk may have changed since the last time the cache was updated
 enum UpdateAction {
@@ -86,18 +86,18 @@ where
         }
     }
 
-    #[inline]
-    pub fn force_update(&self, key: impl AsRef<Path>) -> FsCacheResult<I::T> {
-        let key = key.as_ref();
+    // #[inline]
+    // pub fn force_update(&self, key: impl AsRef<Path>) -> FsCacheResult<I::T> {
+    //     let key = key.as_ref();
 
-        self.force_update_inner(
-            key,
-            Self::fs_mtime(key).map_err(|e| FsCacheErrorKind::CacheFileIo {
-                path: key.to_path_buf(),
-                src: e,
-            })?,
-        )
-    }
+    //     self.force_update_inner(
+    //         key,
+    //         Self::fs_mtime(key).map_err(|e| FsCacheErrorKind::CacheFileIo {
+    //             path: key.to_path_buf(),
+    //             src: e,
+    //         })?,
+    //     )
+    // }
 
     fn force_update_inner(&self, key: impl AsRef<Path>, mtime: SystemTime) -> FsCacheResult<I::T> {
         let key = key.as_ref();
@@ -112,25 +112,25 @@ where
         self.fetch(key)
     }
 
-    #[inline]
-    pub fn contains_key(&self, key: &Path) -> bool {
-        self.base_cache.contains_key(key)
-    }
+    // #[inline]
+    // pub fn contains_key(&self, key: &Path) -> bool {
+    //     self.base_cache.contains_key(key)
+    // }
 
     #[inline]
     pub fn keys(&self) -> Vec<PathBuf> {
         self.base_cache.keys()
     }
 
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.base_cache.len()
-    }
+    // #[inline]
+    // pub fn len(&self) -> usize {
+    //     self.base_cache.len()
+    // }
 
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.base_cache.is_empty()
-    }
+    // #[inline]
+    // pub fn is_empty(&self) -> bool {
+    //     self.base_cache.is_empty()
+    // }
 
     fn fs_mtime(key: &Path) -> Result<SystemTime, std::io::Error> {
         fs::metadata(key)?.modified()

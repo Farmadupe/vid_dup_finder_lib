@@ -5,7 +5,7 @@ edition = "2021"
 keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
 license = "MIT OR Apache-2.0"
 name = "vid_dup_finder_lib"
-repository = "https://github.com/Farmadupe/vid_dup_finder_app"
+repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
 version = "0.2.0"
 
 
@@ -17,8 +17,6 @@ version = "0.2.0"
 "ffmpeg_backend" = ["ffmpeg_gst_wrapper/ffmpeg_backend"]
 "gstreamer_backend" = ["gstreamer", "ffmpeg_gst_wrapper/gstreamer_backend"]
 "default" = ["ffmpeg_backend"]
-
-
 
 
 [lib]

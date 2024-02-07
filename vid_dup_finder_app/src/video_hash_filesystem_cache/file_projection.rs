@@ -54,12 +54,6 @@ impl From<&walkdir::Error> for FilesystemError {
     }
 }
 
-pub enum FileProjectionOutcome {
-    File(PathBuf),
-    RecoverableErr(FileProjectionError),
-    FatalErr(FileProjectionError),
-}
-
 /// A utility struct for holding a set of paths, and all children from those paths.
 /// Contains an associated set of "exclude" paths whose children should not be returned.
 #[derive(Debug, Clone)]

@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use thiserror::Error;
 use vid_dup_finder_lib::*;
 
-use video_hash_filesystem_cache::*;
+use crate::video_hash_filesystem_cache::*;
 
 #[derive(Error, Debug)]
 pub enum AppError {

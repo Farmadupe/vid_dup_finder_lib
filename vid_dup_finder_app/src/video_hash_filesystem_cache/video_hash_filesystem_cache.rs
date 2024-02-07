@@ -3,9 +3,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use generic_filesystem_cache::*;
+use super::generic_filesystem_cache::*;
 
-use crate::{cache_metadata::VdfCacheMetadata, *};
+use super::{cache_metadata::VdfCacheMetadata, *};
 #[cfg(feature = "parallel_loading")]
 use rayon::prelude::*;
 use vid_dup_finder_lib::{CropdetectType, HashCreationErrorKind, VideoHash};

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use generic_filesystem_cache::*;
+use super::generic_filesystem_cache::*;
 use vid_dup_finder_lib::*;
 
 pub struct GenericCacheIf {

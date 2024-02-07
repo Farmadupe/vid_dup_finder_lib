@@ -9,9 +9,6 @@ pub enum FsCacheErrorKind {
     #[error("Error accessing cache storage file {path}: {src}")]
     CacheFileIo { src: std::io::Error, path: PathBuf },
 
-    #[error("IO error accessing {src}: {path}")]
-    CacheItemIo { src: String, path: PathBuf },
-
     #[error("Key missing from cache: {0}")]
     KeyMissing(PathBuf),
 

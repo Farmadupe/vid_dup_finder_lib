@@ -9,7 +9,7 @@ use log::trace;
 use parking_lot::RwLock;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::errors::{
+use super::errors::{
     FsCacheErrorKind::{self, *},
     FsCacheResult,
 };
@@ -228,9 +228,9 @@ where
         }
     }
 
-    pub fn contains_key(&self, key: &Path) -> bool {
-        self.cache.read().contains_key(key)
-    }
+    // pub fn contains_key(&self, key: &Path) -> bool {
+    //     self.cache.read().contains_key(key)
+    // }
 
     pub fn keys(&self) -> Vec<PathBuf> {
         self.cache.read().keys().cloned().collect()
@@ -240,7 +240,7 @@ where
         self.cache.read().len()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.cache.read().is_empty()
-    }
+    // pub fn is_empty(&self) -> bool {
+    //     self.cache.read().is_empty()
+    // }
 }

@@ -5,10 +5,10 @@ use std::{
 
 use serde::Serialize;
 use serde_json::json;
-use vid_dup_finder_lib::*;
+use vid_dup_finder_lib::{self, MatchGroup, VideoHash};
 
 use crate::app::match_group_ext::MatchGroupExt;
-use video_hash_filesystem_cache::VideoHashFilesystemCache;
+use crate::video_hash_filesystem_cache::VideoHashFilesystemCache;
 
 #[cfg(all(target_family = "unix", feature = "gui"))]
 use crate::app::ResolutionThunk;

@@ -7,7 +7,7 @@ use std::{
 use lazy_static::lazy_static;
 use thiserror::Error;
 use vid_dup_finder_lib::*;
-use video_hash_filesystem_cache::*;
+use crate::video_hash_filesystem_cache::*;
 use ResolutionError::*;
 use TrashError::*;
 

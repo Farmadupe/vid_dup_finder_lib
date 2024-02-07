@@ -1,3 +1,8 @@
+#![cfg_attr(rustfmt, rustfmt_skip)]
+#![allow(clippy::all)]
+
+
+
 #[macro_use] 
 extern crate quick_error;
 

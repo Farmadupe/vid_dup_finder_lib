@@ -13,7 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use vid_dup_finder_lib::*;
-use video_hash_filesystem_cache::*;
+use crate::video_hash_filesystem_cache::*;
 
 use crate::app::*;
 

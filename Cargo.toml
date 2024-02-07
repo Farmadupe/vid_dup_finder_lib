@@ -1,8 +1,6 @@
 [workspace]
 members = [
   "vid_dup_finder_app",
-  "generic_filesystem_cache",
-  "video_hash_filesystem_cache",
   "vid_dup_finder_common",
   "vid_dup_finder_lib",
   "vid_frame_iter",

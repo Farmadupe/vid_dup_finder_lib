@@ -1,4 +1,4 @@
-use generic_filesystem_cache::*;
+use super::generic_filesystem_cache::*;
 use thiserror::Error;
 use vid_dup_finder_lib::*;
 
