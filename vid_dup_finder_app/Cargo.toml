@@ -34,7 +34,7 @@ name = "vid_dup_finder"
 ffmpeg_gst_wrapper = {path = "../ffmpeg_gst_wrapper", default-features = false}
 bincode = "1.3"
 clap = {version = "4.1.1", features=["derive", "cargo", "string"]}
-comment = { git = "https://github.com/Farmadupe/comment", rev = "cafa8e4eedb423e5b6e3c8601a8f582f6457ddcc" }
+comment_fix_issue_1 = { path = "comment" }
 directories-next = "2.0"
 image = {version = "0.24", default-features = false}
 vid_dup_finder_common = {path = "../vid_dup_finder_common"}

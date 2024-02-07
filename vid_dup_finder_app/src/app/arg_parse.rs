@@ -638,7 +638,7 @@ fn get_argsfile_args(argsfile_path: &Path) -> Result<clap::ArgMatches, AppError>
         .map_err(|e| ArgsFileNotFound(PathBuf::from(argsfile_path), e))?;
 
     //now strip comments from the args file
-    let args_file_contents = match comment::shell::strip(argsfile_text) {
+    let args_file_contents = match comment_fix_issue_1::shell::strip(argsfile_text) {
         Ok(args_file_contents) => args_file_contents,
         Err(e) => return Err(ArgsFileParse(argsfile_path.to_owned(), e.to_string())),
     };
