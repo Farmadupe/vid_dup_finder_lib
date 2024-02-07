@@ -5,7 +5,6 @@ use vid_dup_finder_lib::MatchGroup;
 
 use vid_dup_finder_common::FrameSeqRgb;
 
-
 use ffmpeg_gst_wrapper::ffmpeg_gst;
 
 use ffmpeg_gst::FrameReaderCfgUnified;

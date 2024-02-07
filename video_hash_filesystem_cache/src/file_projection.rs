@@ -24,10 +24,6 @@ pub enum FileProjectionError {
     #[error("Excl path not found: {0:?}")]
     ExclPathNotFound(Vec<PathBuf>),
 
-    /// Any Io error that occurred during file enumeration.
-    #[error("File enumeration failed")]
-    Enumeration(String),
-
     /// a src_path is excluded by an excl_path.
     #[error("A start path is excluded by an excl path")]
     SrcPathExcluded {
@@ -36,15 +32,25 @@ pub enum FileProjectionError {
     },
 }
 
-impl From<walkdir::Error> for FileProjectionError {
-    fn from(e: walkdir::Error) -> Self {
-        Self::Enumeration(format!("{e}"))
+#[derive(Error, Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[error("File enumeration failed: {0}")]
+pub struct FilesystemError(String);
+
+impl FilesystemError {
+    pub fn into_message(self) -> String {
+        self.0
     }
 }
 
-impl From<&walkdir::Error> for FileProjectionError {
+impl From<walkdir::Error> for FilesystemError {
+    fn from(e: walkdir::Error) -> Self {
+        Self(format!("{e}"))
+    }
+}
+
+impl From<&walkdir::Error> for FilesystemError {
     fn from(e: &walkdir::Error) -> Self {
-        Self::Enumeration(format!("{e}"))
+        Self(format!("{e}"))
     }
 }
 
@@ -146,7 +152,7 @@ impl FileProjection {
 
     /// Visit the filesystem to get all child files which are a child of any of Self::src_paths,
     /// and which are not a child of Self::excl_paths.
-    pub fn project_using_fs(&mut self) -> Result<Vec<FileProjectionError>, FileProjectionError> {
+    pub fn project_using_fs(&mut self) -> Result<Vec<FilesystemError>, FileProjectionError> {
         use FileProjectionError::*;
 
         //we will return a fatal error if any directory/file that the user
@@ -171,7 +177,7 @@ impl FileProjection {
             return Err(ExclPathNotFound(excl_fatal));
         }
 
-        let projection_iterator = self
+        let (enumerated_paths, recoverable_errs): (_, Vec<_>) = self
             .src_paths
             .iter()
             .flat_map(|src_path| {
@@ -181,7 +187,7 @@ impl FileProjection {
                 })
             })
             .filter_map(|dir_entry_res| match dir_entry_res {
-                Err(e) => Some(Err(FileProjectionError::Enumeration(format!("{e:?}")))),
+                Err(e) => Some(Err(FilesystemError::from(e))),
                 Ok(dir_entry) => {
                     let src_path = dir_entry.path();
                     if src_path.is_file() {
@@ -190,10 +196,8 @@ impl FileProjection {
                         None
                     }
                 }
-            });
-
-        let (enumerated_paths, recoverable_errs): (_, Vec<_>) =
-            projection_iterator.partition_result();
+            })
+            .partition_result();
 
         self.projected_files = enumerated_paths;
 

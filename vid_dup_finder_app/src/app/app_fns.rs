@@ -254,24 +254,16 @@ fn do_app_outputs(
     ////////////////////////////////////////////////////////////////////////////
     // Gui output
     ////////////////////////////////////////////////////////////////////////////
+    #[cfg(all(target_family = "unix", feature = "gui"))]
     match &cfg.output_cfg.gui {
         super::app_cfg::GuiOutputCfg::NoGui => (),
         super::app_cfg::GuiOutputCfg::Gui {
             sorting,
             trash_path,
         } => {
-            #[cfg(all(target_family = "unix", feature = "gui"))]
-            {
-                search_output.sort(*sorting);
-                let thunks = search_output.resolution_thunks(&_cache, trash_path.as_deref());
-                run_gui(thunks)?;
-            }
-            #[cfg(not(all(target_family = "unix", feature = "gui")))]
-            {
-                let _ = sorting;
-                let _ = trash_path;
-                panic!("GUI not available");
-            }
+            search_output.sort(*sorting);
+            let thunks = search_output.resolution_thunks(&_cache, trash_path.as_deref());
+            run_gui(thunks)?;
         }
     }
     Ok(())
@@ -690,12 +682,7 @@ fn update_hash_cache(
         .into_iter()
         .chain(ref_projection_errs.into_iter())
     {
-        match recoverable_err {
-            FileProjectionError::Enumeration(err_string) => {
-                nonfatal_errs.push(AppError::FileSearchError(err_string))
-            }
-            _ => unreachable!(),
-        }
+        nonfatal_errs.push(AppError::FileSearchError(recoverable_err.into_message()))
     }
 
     let loading_paths = cands.projected_files().chain(refs.projected_files());

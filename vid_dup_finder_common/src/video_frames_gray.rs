@@ -98,13 +98,20 @@ pub trait VdfFrameExt {
                 .count() as u32
         };
 
-        Crop::new(
-            (width, height),
-            measure_side(Left),
-            measure_side(Right),
-            measure_side(Top),
-            measure_side(Bottom),
-        )
+        let l = measure_side(Left);
+        let r = measure_side(Right);
+        let t = measure_side(Top);
+        let b = measure_side(Bottom);
+
+        //sanity check -- make sure there is at least 1 pix in the horz and vert dimension
+        let remaining_horz = (width as i32) - (l as i32) - (r as i32);
+        let remaining_vert = (height as i32) - (t as i32) - (b as i32);
+
+        if (remaining_horz >= 1) && (remaining_vert >= 1) {
+            Crop::new((width, height), l, r, t, b)
+        } else {
+            Crop::new((width, height), 0, 0, 0, 0)
+        }
     }
 }
 

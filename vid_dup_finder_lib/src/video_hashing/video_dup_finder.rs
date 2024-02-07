@@ -1,6 +1,4 @@
-
-
-use crate::{VideoHash, MatchGroup};
+use crate::{MatchGroup, VideoHash};
 
 use super::search_algorithm::Search;
 

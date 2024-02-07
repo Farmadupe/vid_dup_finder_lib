@@ -62,7 +62,7 @@ fn inner() {
         })
         .collect();
 
-    // Get a collection of duplicate groups, using the default search configuration. 
+    // Get a collection of duplicate groups, using the default search configuration.
     // One should contain all dog vids. One should contain all cat vids.
     let tol = vid_dup_finder_lib::DEFAULT_SEARCH_TOLERANCE;
     let dup_groups = search(hashes, tol);

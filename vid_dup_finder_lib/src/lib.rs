@@ -14,7 +14,6 @@
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::cast_sign_loss)]
 
-
 //! # Overview
 //! `vid_dup_finder_lib` is a library for finding near-duplicate video files, even if the videos are in different
 //! formats, size/resolution, quality, or framerate.

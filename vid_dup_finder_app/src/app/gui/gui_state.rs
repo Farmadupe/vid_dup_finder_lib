@@ -472,23 +472,25 @@ impl GuiState {
     }
 
     pub fn next_thunk(&mut self) {
-        if self.thunk_idx < self.thunks.len() - 1 {
-            self.thunk_idx += 1;
+        self.thunk_idx = if (self.thunk_idx + 1) <= (self.last_thunk_idx()) {
+            self.thunk_idx + 1
         } else {
-            self.thunk_idx = 0;
-        }
-
+            0
+        };
         self.gen_thunk();
     }
 
     pub fn prev_thunk(&mut self) {
-        if self.thunk_idx > 0 {
-            self.thunk_idx -= 1;
+        self.thunk_idx = if self.thunk_idx > 0 {
+            self.thunk_idx - 1
         } else {
-            self.thunk_idx = self.thunks.len() - 1;
-        }
-
+            self.last_thunk_idx()
+        };
         self.gen_thunk();
+    }
+
+    fn last_thunk_idx(&self) -> usize {
+        self.thunks.len() - 1
     }
 
     pub fn render(&self) -> gtk4::Box {
@@ -579,6 +581,10 @@ impl GuiState {
         self.current_thunk.set_choice(self.thumb_choice);
     }
 
+    fn thunk_idx_is_valid(&self, idx: usize) -> bool {
+        idx > (self.thunks.len() - 1)
+    }
+
     fn vid_idx_action(&mut self, action: KeypressState) {
         use KeypressState as Ks;
 
@@ -590,11 +596,16 @@ impl GuiState {
             (Ks::Exclude,     Some(idx)) => self.current_thunk.exclude(idx),
             (Ks::Include,     Some(idx)) => self.current_thunk.include(idx),
             (Ks::View,        Some(idx)) => self.current_thunk.vlc_video(idx),
-            (Ks::JumpTo,      Some(idx)) => { self.thunk_idx = idx; self.gen_thunk(); }
             (Ks::Resolve,     _)         => { self.current_thunk.resolve(&self.keypress_string); self.next_thunk(); }
             (Ks::Nautilus,    Some(idx)) => self.current_thunk.nautilus_file(idx),
             (Ks::VlcAllSeq,   _)         => self.current_thunk.vlc_all_seq(),
             (Ks::VlcAllSlave, _)         => self.current_thunk.vlc_all_slave(),
+            (Ks::JumpTo,      Some(idx)) => {
+                if self.thunk_idx_is_valid(idx) {
+                    self.thunk_idx = idx;
+                    self.gen_thunk();
+                }
+            }
             _ => {}
         };
 

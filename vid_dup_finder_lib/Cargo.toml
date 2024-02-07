@@ -35,7 +35,7 @@ test = true
 
 [dependencies]
 image = {version = "0.24"}
-vid_dup_finder_common = {path = "../vid_dup_finder_common"}
+vid_dup_finder_common = {path = "../vid_dup_finder_common", version = "0.1.0"}
 bitvec = "1.0"
 imageproc = "0.23"
 itertools = "0.12"
@@ -44,7 +44,7 @@ rand = "0.8"
 rustdct = "0.7"
 serde = {version = "1.0", features = ["derive"]}
 thiserror = "1.0"
-ffmpeg_gst_wrapper = {path = "../ffmpeg_gst_wrapper", default-features = false}
+ffmpeg_gst_wrapper = {path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.1.0"}
 enum-utils = "0.1"
 
 

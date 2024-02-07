@@ -18,7 +18,7 @@ pub fn duration(uri: impl AsRef<str>) -> Result<Option<std::time::Duration>, gli
         Err(e) => {
             //println!("{e:?}");
             return Err(e);
-        },
+        }
     };
 
     //Find out if the media file is actually a video file
