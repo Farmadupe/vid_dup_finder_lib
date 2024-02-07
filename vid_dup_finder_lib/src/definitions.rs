@@ -10,7 +10,7 @@ pub const DEFAULT_VID_HASH_SKIP_FORWARD: f64 = 30.0;
 
 //tweakable. Number of frames that the 3d DCT is performed on. Higher numbers extend hashing time
 // but (hopefully) makes hashes more robust to small time offsets.
-pub const DCT_SIZE: u32 = 256;
+pub const DCT_SIZE: u32 = 64;
 
 // Hash definitions
 pub const HASH_SIZE: u32 = 8; //number of images

@@ -9,8 +9,8 @@ name = "vid_frame_iter"
 
 [dependencies]
 gdk = "0.18"
-gio = "0.18"
-glib = {version = "0.18"}
+gio = "0.19"
+glib = {version = "0.19"}
 gstreamer = "0.21"
 gstreamer-app = {version = "0.21"}
 gstreamer-base = "0.21"
