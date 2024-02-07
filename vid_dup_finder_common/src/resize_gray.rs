@@ -35,10 +35,10 @@ where
 
     src_frame_fr
         .set_crop_box(CropBox {
-            left,
-            top,
-            width: NonZeroU32::try_from(width).unwrap(),
-            height: NonZeroU32::try_from(height).unwrap(),
+            left: left as f64,
+            top: top as f64,
+            width: width as f64,
+            height: height as f64,
         })
         .unwrap();
 
@@ -116,10 +116,10 @@ where
         // println!("width: {width:?}, height: {height:?}");
 
         let crop_box = CropBox {
-            left,
-            top,
-            width,
-            height,
+            left: left as f64,
+            top: top as f64,
+            width: u32::from(width) as f64,
+            height: u32::from(height) as f64,
         };
         if let Err(_e) = src_frame_fr.set_crop_box(crop_box) {
             return None;
