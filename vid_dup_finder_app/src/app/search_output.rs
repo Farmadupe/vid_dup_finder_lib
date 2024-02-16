@@ -79,45 +79,42 @@ impl SearchOutput {
             f.write_all(s.as_bytes()).unwrap();
         }
 
-        let chunk_size = 250;
-        self.dup_groups
-            .chunks(chunk_size)
+        #[cfg(feature = "parallel_loading")]
+        let it = self
+            .dup_groups
+            .iter()
             .enumerate()
-            .for_each(|(chunk_no, chunk)| {
-                let chunk_offset = chunk_no * chunk_size;
+            .par_bridge()
+            .into_par_iter();
 
-                #[cfg(feature = "parallel_loading")]
-                let it = chunk.into_par_iter();
+        #[cfg(not(feature = "parallel_loading"))]
+        let it = self.dup_groups.iter().enumerate();
 
-                #[cfg(not(feature = "parallel_loading"))]
-                let it = chunk.iter();
+        it.for_each(|(i, match_group)| {
+            let output_path = output_thumbs_dir.join(format!("{i}.bmp"));
 
-                it.enumerate().for_each(|(group_no, match_group)| {
-                    let i = chunk_offset + group_no;
-                    let output_path = output_thumbs_dir.join(format!("{i}.jpg"));
+            info!(
+                target: "write_image",
+                    "Writing match image to {}", output_path.display()
+            );
 
-                    info!(
-                        target: "write_image",
-                            "Writing match image to {}", output_path.display()
+            match match_group.to_image() {
+                Ok(img) => {
+                    std::fs::create_dir_all(output_path.parent().unwrap()).unwrap();
+                    img.save(output_path).unwrap();
+                }
+                Err(msg) => {
+                    let dup_group_paths = match_group
+                    .contained_paths()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect::<Vec<_>>();
+                    warn!(
+                        "failed to save output images: {msg}, dup_group_paths: {dup_group_paths:?}, img_path: {output_path:?}"
                     );
+                    //panic!();
+                }
+            };
 
-                    match match_group.to_image() {
-                        Ok(img) => {
-                            std::fs::create_dir_all(output_path.parent().unwrap()).unwrap();
-                            img.save(output_path).unwrap();
-                        }
-                        Err(msg) => {
-                            let dup_group_paths = match_group
-                            .contained_paths()
-                            .map(|p| p.to_string_lossy().to_string())
-                            .collect::<Vec<_>>();
-                            warn!(
-                                "failed to save output images: {msg}, dup_group_paths: {dup_group_paths:?}, img_path: {output_path:?}"  
-                            );
-                            //panic!();
-                        }
-                    };
-                });
             });
     }
 

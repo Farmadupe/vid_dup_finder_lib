@@ -148,6 +148,7 @@ fn to_image_temp(
                     .into_iter()
                     .filter_map(Result::ok)
                     .map(|f| f.frame_owned())
+                    .take(8)
                     .collect::<Vec<_>>();
                 let seq = FrameSeqRgb::from_images(frame_vec);
 

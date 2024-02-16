@@ -582,7 +582,7 @@ impl GuiState {
     }
 
     fn thunk_idx_is_valid(&self, idx: usize) -> bool {
-        idx > (self.thunks.len() - 1)
+        idx < (self.thunks.len())
     }
 
     fn vid_idx_action(&mut self, action: KeypressState) {
@@ -601,6 +601,7 @@ impl GuiState {
             (Ks::VlcAllSeq,   _)         => self.current_thunk.vlc_all_seq(),
             (Ks::VlcAllSlave, _)         => self.current_thunk.vlc_all_slave(),
             (Ks::JumpTo,      Some(idx)) => {
+                //println!("idx: {idx}, {}", self.thunk_idx_is_valid(idx));
                 if self.thunk_idx_is_valid(idx) {
                     self.thunk_idx = idx;
                     self.gen_thunk();

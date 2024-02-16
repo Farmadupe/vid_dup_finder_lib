@@ -119,7 +119,7 @@ impl ThumbRow {
     fn without_letterbox(&self) -> Self {
         let uncropped_frames = FrameSeqRgb::from_images(self.thumbs.clone()).unwrap();
         let crop = uncropped_frames.letterbox_crop();
-        dbg!(crop);
+        //dbg!(crop);
         let frames = uncropped_frames.crop(crop.as_view_args());
 
         //println!("{crop:#?}");

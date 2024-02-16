@@ -7,11 +7,11 @@ use std::{
 use serde::{Deserialize, Serialize};
 use FsCacheErrorKind::*;
 
+use super::cache_interface::CacheInterface;
 use super::{
     base_fs_cache::BaseFsCache,
     errors::{FsCacheErrorKind, FsCacheResult},
 };
-use super::cache_interface::CacheInterface;
 
 /// How a file on disk may have changed since the last time the cache was updated
 enum UpdateAction {

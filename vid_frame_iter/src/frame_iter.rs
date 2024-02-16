@@ -62,8 +62,7 @@ impl VideoFrameIterBuilder {
         let src_path = self.uri;
         let pipeline_desc =
             format!("uridecodebin uri=\"{src_path}\" buffer-size=1 ! {fps_arg} videoconvert ! appsink name=sink");
-        let pipeline = gstreamer::parse_launch(&pipeline_desc)
-            .expect("failed to create a pipeline")
+        let pipeline = gstreamer::parse_launch(&pipeline_desc)?
             .downcast::<gstreamer::Pipeline>()
             .expect("Expected a gstreamer::Pipeline");
 

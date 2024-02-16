@@ -4,10 +4,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::video_hash_filesystem_cache::*;
 use lazy_static::lazy_static;
 use thiserror::Error;
 use vid_dup_finder_lib::*;
-use crate::video_hash_filesystem_cache::*;
 use ResolutionError::*;
 use TrashError::*;
 

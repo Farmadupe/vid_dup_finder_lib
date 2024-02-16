@@ -111,21 +111,27 @@ impl VideoHash {
 
         //Before generating the hash, if requested we detect black bands around the edges of the video
         //frames, which will be discarded before generating the hash.
-        let crop = if cfg!(any()) {
+        let dct = if cfg!(all()) {
             //cache frames (faster) or stream them (significantly less memory)
-            let frames = iterate_frames()?.take(64).collect::<Vec<_>>();
-            match opts.cropdetect {
+            let frames = iterate_frames()?
+                .take(DCT_SIZE as usize)
+                .collect::<Vec<_>>();
+            let crop = match opts.cropdetect {
                 CropdetectType::NoCrop => Self::detect_noletterbox_crop(frames.iter()),
                 CropdetectType::Letterbox => Self::detect_letterbox_crop(frames.iter()),
-            }
+            };
+
+            let frames_64x64 = frames
+                .iter()
+                .filter_map(|frame| crop_resize_flat(frame.as_flat(), dct_size, dct_size, crop));
+
+            Dct3d::from_images(frames_64x64)
         } else {
-            match opts.cropdetect {
+            let crop = match opts.cropdetect {
                 CropdetectType::NoCrop => Self::detect_noletterbox_crop(iterate_frames()?),
                 CropdetectType::Letterbox => Self::detect_letterbox_crop(iterate_frames()?),
-            }
-        };
+            };
 
-        let dct = {
             let frames_64x64 = iterate_frames()?
                 .filter_map(|frame| crop_resize_flat(frame.as_flat(), dct_size, dct_size, crop));
 
