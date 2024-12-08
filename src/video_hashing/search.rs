@@ -57,7 +57,7 @@ impl Search {
     fn search_one(&mut self, target: &VideoHash, tolerance: RawTolerance, consume: bool) -> Vec<VideoHash> {
         let mut ret = vec![];
 
-        for mut entry in self.duration_slice(target.duration()) {
+        for entry in self.duration_slice(target.duration()) {
             if !entry.matched && tolerance.contains(&target.levenshtein_distance(&entry.value)) {
                 ret.push(entry.value.clone());
                 if consume {
