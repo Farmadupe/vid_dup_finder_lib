@@ -6,8 +6,8 @@ edition = "2021"
 keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
 license = "MIT OR Apache-2.0"
 name = "vid_dup_finder"
-repository = "https://github.com/Farmadupe/vid_dup_finder"
-version = "0.2.1"
+repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
+version = "0.2.2"
 build = "build.rs"
 
 [features]
