@@ -1,0 +1,54 @@
+[package]
+categories = ["multimedia::video"]
+description = "a library to find near-duplicate video files"
+edition = "2021"
+keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
+license = "MIT OR Apache-2.0"
+name = "vid_dup_finder_lib"
+repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
+version = "0.2.0"
+
+
+[features]
+"app_only_fns" = []
+"test-util" = []
+"ffmpeg_backend" = ["ffmpeg_gst_wrapper/ffmpeg_backend"]
+"gstreamer_backend" = ["gstreamer", "ffmpeg_gst_wrapper/gstreamer_backend"]
+"default" = ["ffmpeg_backend"]
+"debug_hash_generation" = []
+"hash_size_6" = []
+"hash_size_10" = []
+
+
+[lib]
+crate-type = ["lib"]
+name = "vid_dup_finder_lib"
+path = "src/lib.rs"
+
+[[test]]
+name = "test_find_all"
+
+[[example]]
+name = "example"
+test = true
+
+[dependencies]
+image = { version = "0.25" }
+vid_dup_finder_common = { path = "../vid_dup_finder_common", version = "0.2.0" }
+bitvec = "1.0"
+itertools = "0.13"
+ndarray = "0.16"
+rand = "0.8"
+rustdct = "0.7"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+ffmpeg_gst_wrapper = { path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.2.0" }
+enum-utils = "0.1"
+
+
+[target.'cfg(unix)'.dependencies]
+gstreamer = { version = "0.23", optional = true }
+
+
+[dev-dependencies]
+itertools = "0.13"

@@ -1,0 +1,11 @@
+[package]
+name = "comment_fix_issue_1"
+version = "0.1.0"
+authors = ["adam-mcdaniel <adam.mcdaniel17@gmail.com>"]
+edition = "2021"
+description = "Strip comments for multiple programming languages"
+license = "MIT"
+repository = "https://github.com/adam-mcdaniel/comments"
+
+[dependencies]
+quick-error = "2.0"

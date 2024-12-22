@@ -1,0 +1,109 @@
+[package]
+authors = ["Farmadupe"]
+categories = ["command-line-utilities", "multimedia", "visualization"]
+description = "A command line application (and linux-only gui) to find duplicate video files"
+edition = "2021"
+keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
+license = "MIT OR Apache-2.0"
+name = "vid_dup_finder"
+repository = "https://github.com/Farmadupe/vid_dup_finder"
+version = "0.2.1"
+build = "build.rs"
+
+[features]
+debug_hash_generation = []
+gui_slint = [
+    "dep:slint",
+    "dep:libc",
+    "dep:lazy_static",
+    "dep:regex",
+    "dep:sha2",
+    "dep:lru"
+]
+parallel_loading = ["rayon"]
+ffmpeg_backend = [
+    "vid_dup_finder_lib/ffmpeg_backend",
+    "vid_dup_finder_lib/app_only_fns",
+    "ffmpeg_gst_wrapper/ffmpeg_backend",
+]
+gstreamer_backend = [
+    "vid_dup_finder_lib/gstreamer_backend",
+    "vid_dup_finder_lib/app_only_fns",
+    "ffmpeg_gst_wrapper/gstreamer_backend",
+]
+default = ["parallel_loading", "ffmpeg_backend", "gui_slint"]
+print_timings = []
+
+hash_size_10 = [
+    "vid_dup_finder_lib/hash_size_10"
+]
+
+hash_size_6 = [
+    "vid_dup_finder_lib/hash_size_6"
+]
+
+[[bin]]
+name = "vid_dup_finder"
+
+[dependencies]
+vid_dup_finder_lib = { path = "../vid_dup_finder_lib", version = "0.2" }
+vid_dup_finder_common = { path = "../vid_dup_finder_common", version = "0.2.0" }
+ffmpeg_gst_wrapper = { path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.2.0" }
+bincode = "1.3"
+clap = { version = "4.5", features = ["derive", "cargo", "string"] }
+directories-next = "2.0"
+image = { version = "0.25" }
+imageproc = "0.25"
+itertools = "0.13"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+shell-words = "1.0"
+simplelog = "0.12"
+thiserror = "2.0"
+walkdir = "2.5"
+parking_lot = "0.12"
+cfg-if = "1.0"
+ab_glyph = "0.2"
+blake3 = { version = "1.5", features = ["serde", "mmap"] }
+eyre = "0.6"
+ignore = "0.4"
+crossbeam-channel = "0.5"
+crossbeam-queue = "0.3"
+bytesize = "1.3"
+thread-priority="1.1"
+iter-tee = "0.1"
+rlimit="0.10"
+quick-error="2.0"
+
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+jemallocator = "0.5"
+
+
+# Gui
+# gdk4 = { version = "0.8", optional = true }
+# gdk-pixbuf = { version = "0.19", optional = true }
+# gio = { version = "0.19", optional = true }
+# glib = { version = "0.19", optional = true }
+# gtk4 = { version = "0.8", optional = true }
+lazy_static = { version = "1.4", optional = true }
+libc = { version = "0.2", optional = true }
+regex = { version = "1.5", optional = true }
+sha2 = { version = "0.10", optional = true }
+vid_frame_iter = { path = "../vid_frame_iter", optional = true, version = "0.2.0" }
+
+
+# Gui slint
+slint = { version = "1.7", optional = true }
+lru = { version = "0.12", optional = true }
+
+# Parallel loading
+rayon = { version = "1.5", optional = true }
+
+
+[dev-dependencies]
+chrono = "0.4"
+
+[build-dependencies]
+slint-build = "1.6"

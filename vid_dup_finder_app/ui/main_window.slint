@@ -1,0 +1,391 @@
+import { Button, VerticalBox, ComboBox, Spinner, ScrollView, CheckBox, LineEdit, StandardButton, Slider, Palette } from "std-widgets.slint";
+import { ThunkEntry } from "thunk_entry.slint";
+
+
+struct ThunkGuiData {
+    enabled: bool,
+    thumb: image,
+    idx: int,
+    path: string,
+    aspect_ratio: float,
+    file_size: string,
+    vid_duration: string,
+    vid_resolution: string,
+    png_size: string,
+    png_size_int: int,
+    png_rank_proportion: float,
+    canny_rank_proportion: float,
+    canny_size: string, 
+    canny_size_int: int,
+    jpg_size: string,
+    jpg_size_int: int,
+    jpg_rank_proportion: float,
+    avif_size: string,
+    avif_size_int: int,
+    avif_rank_proportion: float,
+}
+
+
+
+export component MainWindow inherits Window {
+    preferred-width: 1900px;
+
+    in-out property <int> thunk_idx;
+    in property <int> max_idx;
+    in-out property <[ThunkGuiData]> thunk_entries;
+    in-out property <bool> cropdetect: true;
+    in-out property <bool> square: true;
+    out property <bool> is_forwards: true;
+    in-out property <float> zoom_val: 100.0;
+    property <float> anim_val: 1000.0;
+    in-out property <int> proc_q_len: 0;
+    in-out property <int> q_q_len: 0;
+    in-out property <int> png_q_len: 0;
+    in-out property <int> avif_q_len: 0;
+    in-out property <int> canny_q_len: 0;
+    in-out property <int> jpg_q_len: 0;
+
+    in-out property <bool> view_many: true;
+    in-out property <int> curr_vid: 0;
+
+    callback request-next-thunk();
+    callback request-prev-thunk();
+    callback jump-to-thunk();
+    callback key-callback(KeyEvent);
+    callback accept-idx-input(string);
+    callback accept-idx-keep(string);
+    callback accept-idx-exclude(string);
+    callback regen-images();
+    callback exclude-curr-vid();
+    callback view-curr-vid(string);
+    callback view-top-vid();
+    callback browse-curr-vid(string);
+    callback browse-top-vid();
+
+    in-out property <bool> disable_stats: true;
+    callback set-stats-en(bool);
+
+    property <duration> anim_time: 2250ms;
+    property <length> rect_min_width: 0px;
+
+    public function focus-jumpbox() {
+        idx-input.focus();
+    }
+
+    public function focus-keep() {
+        idx-keep.focus();
+    }
+
+    public function focus-default() {
+        my-key-handler.focus();
+    }
+    public function set-resolved-ok-colour(colour: string) {
+        if colour == "black" {
+            rect-ok.background = rgb(0,0,0);
+            rect-ok.height = 30px;
+            rect-ok.width = 0px;
+        } else if colour == "blue" {
+            rect-ok.background = rgb(255,255,0);
+            rect-ok.height = 30px;
+            rect-ok.width = 10px;
+        } else if colour == "red" {
+            rect-ok.background = rgb(255,0,0);
+            rect-ok.height = 100px;
+            rect-ok.width = 10px;
+        }
+    }
+    public function set-vlc-colour(colour: string) {
+        if colour == "black" {
+            rect-vlc.background = rgb(0,0,0);
+            rect-vlc.width = 0px;
+        } else if colour == "blue" {
+            rect-vlc.background = rgb(0,0,255);
+            rect-vlc.width = 10px;
+        } else if colour == "red" {
+            rect-vlc.background = rgb(255,0,0);
+            rect-vlc.width = 10px;
+        }
+    }
+
+    public pure function colorchoice(val: int, color1: color, color2: color) -> color {
+        if val != 0 {
+            return color1;
+        } else {
+            return color2;
+        }
+    }
+
+    init => {
+        Palette.color-scheme = ColorScheme.dark;
+    }
+
+    my-key-handler := FocusScope {
+        key-pressed(event) => {
+            root.key-callback(event);
+            accept
+        }
+    }
+
+    top := VerticalBox {
+        alignment: start;
+        Text {
+            text: "\{root.thunk_idx} / \{root.max_idx} \{root.proc_q_len} \{root.png_q_len} \{root.avif_q_len} \{root.jpg_q_len} \{root.canny_q_len} \{root.curr_vid}";
+        }
+
+        HorizontalLayout {
+            alignment: start;
+            VerticalLayout {
+                alignment: start;
+                HorizontalLayout {
+                    alignment: start;
+
+                    Button {
+                        min-width: 60px;
+                        text: "Next";
+                        clicked => {
+                            root.is_forwards = true;
+                            root.request-next-thunk();
+                            root.regen-images();
+                        }
+                    }
+
+                    Button {
+                        min-width: 60px;
+                        text: "Prev";
+                        clicked => {
+                            root.is_forwards = false;
+                            root.request-prev-thunk();
+                            root.regen-images();
+                        }
+                    }
+
+                    Button {
+                        min-width: 60px;
+                        text: "Jump";
+                        clicked => {
+                            idx-input.text = "";
+                            idx-input.focus();
+                            set-resolved-ok-colour("red");
+                        }
+                    }
+
+                    idx_input := LineEdit {
+                        input-type: InputType.number;
+                        width: 50px;
+                        accepted => {
+                            root.accept-idx-input(idx-input.text);
+                            idx-input.text = "";
+                            my-key-handler.focus();
+                        }
+                    }
+
+                    Button {
+                        min-width: 60px;
+                        text: "Keep";
+                        clicked => {
+                            idx-keep.text = "";
+                            my-key-handler.focus();
+                        }
+                    }
+
+                    idx_keep := LineEdit {
+                        width: 50px;
+                        accepted => {
+                            root.accept-idx-keep(idx-keep.text);
+                            idx-keep.text = "";
+                            set-resolved-ok-colour("blue");
+                            my-key-handler.focus();
+                        }
+                    }
+
+                    Button {
+                        min-width: 60px;
+                        text: "Exclude";
+                        clicked => {
+                            exclude-curr-vid()
+                        }
+                    }
+
+                    idx_exclude := LineEdit {
+                        width: 50px;
+                        accepted => {
+                            root.accept-idx-exclude(idx-exclude.text);
+                            idx-exclude.text = "";
+                            my-key-handler.focus();
+                        }
+                    }
+
+                    rect_ok := Rectangle {
+                        width: 0px;
+                        height: 30px;
+                        background: black;
+                        animate width {
+                            duration: anim_val * 1ms;
+                            easing: ease-in-out;
+                        }
+                    }
+
+                    // if proc_q_len == 0: rect_proc_ok := Rectangle {
+                    //     width: 10px;
+                    //     height: 30px;
+                    //     background: black;
+                    // }
+
+                    // rect_proc_proc := Rectangle {
+                    //     width: Math.min(200px, rect_min_width + (proc_q_len * 15px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(proc_q_len, blue, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    // rect_q_proc := Rectangle {
+                    //     width: Math.min(300px, rect_min_width + (q_q_len * 4px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(q_q_len, orangered, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    // rect_png_proc := Rectangle {
+                    //     width: Math.min(300px, rect_min_width + (png_q_len * 4px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(png_q_len, green, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    // rect_avif_proc := Rectangle {
+                    //     width: Math.min(300px, rect_min_width + (avif_q_len * 4px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(avif_q_len, yellow, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    // rect_jpg_proc := Rectangle {
+                    //     width: Math.min(300px, rect_min_width + (jpg_q_len * 4px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(jpg_q_len, teal, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    // rect_canny_proc := Rectangle {
+                    //     width: Math.min(300px, rect_min_width + (canny_q_len * 4px));
+                    //     animate width {
+                    //         duration: anim_val * 1ms;
+                    //         easing: ease-in-out;
+                    //     }
+                    //     height: 30px;
+                    //     background: colorchoice(canny_q_len, violet, black);
+                    //     animate background { duration: anim_val * 1ms; }
+                    // }
+
+                    rect_vlc := Rectangle {
+                        width: 0px;
+                        height: 30px;
+                        background: black;
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                CheckBox {
+                    text: "cropdetect";
+                    checked <=> root.cropdetect;
+                    toggled => {
+                        root.regen-images()
+                    }
+                }
+
+                same_size_checkbox := CheckBox {
+                    checked <=> root.square;
+                    text: "Square";
+                }
+
+                CheckBox {
+                    checked <=> root.view_many;
+                    text: "View all";
+                }
+
+                CheckBox {
+                    checked <=> root.disable_stats;
+                    toggled => {
+                        root.set-stats-en(!root.disable_stats)
+                    }
+                    text: "Disable stats";
+                }
+
+                VerticalLayout {
+
+                    zoom_slider := Slider {
+                        minimum: 0;
+                        maximum: 2000;
+                        width: 400px;
+                        value <=> zoom_val;
+                    }
+
+                    // anim_slider := Slider {
+                    //     minimum: 0;
+                    //     maximum: 5000;
+                    //     width: 400px;
+                    //     value <=> anim_val;
+                    // }
+                }
+            }
+        }
+
+        ScrollView {
+            viewport-height: 5000px;
+            viewport-width: 5000px;
+
+            min-height: 1200px;
+
+            VerticalLayout {
+                alignment: start;
+
+                for thunk[i] in thunk_entries: ThunkEntry {
+                    thumb: thunk.thumb;
+                    path: thunk.path;
+                    thumb_width: zoom-slider.value;
+                    idx: thunk.idx;
+                    square <=> same_size_checkbox.checked;
+                    aspect_ratio: thunk.aspect_ratio;
+                    file_size: thunk.file-size;
+                    vid_resolution: thunk.vid-resolution;
+                    png_size: thunk.png-size;
+                    png_rank_proportion: thunk.png-rank-proportion;
+                    canny_size: thunk.canny-size;
+                    canny_rank_proportion: thunk.canny-rank-proportion;
+                    jpg_size: thunk.jpg-size;
+                    jpg_rank_proportion: thunk.jpg-rank-proportion;
+                    avif_size: thunk.avif-size;
+                    avif_rank_proportion: thunk.avif-rank-proportion;
+                    vid_duration: thunk.vid_duration;
+                    view-curr-vid(path) => {
+                        root.view-curr-vid(path)
+                    }
+                    browse-curr-vid(path) => {
+                        root.browse-curr-vid(path)
+                    }
+                }
+            }
+        }
+    }
+}

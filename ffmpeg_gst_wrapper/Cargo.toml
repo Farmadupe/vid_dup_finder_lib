@@ -1,0 +1,24 @@
+[package]
+name = "ffmpeg_gst_wrapper"
+version = "0.2.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
+description = "An adapter to allow vid_dup_finder to seamlessly use gstreamer or ffmpeg"
+
+[lib]
+crate-type = ["lib"]
+
+[features]
+"ffmpeg_backend" = ["ffmpeg_cmdline_utils"]
+"gstreamer_backend" = ["vid_frame_iter", "glib"]
+"default" = ["gstreamer_backend"]
+
+[dependencies]
+ffmpeg_cmdline_utils = { path = "../ffmpeg_cmdline_utils", optional = true, version = "0.3.0" }
+image = { version = "0.25" }
+vid_frame_iter = { path = "../vid_frame_iter", optional = true, version = "0.2.0" }
+glib = { version = "0.20", features = ["v2_66"], optional = true }
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+url = "2.2"
