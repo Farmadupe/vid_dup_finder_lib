@@ -1,0 +1,25 @@
+[package]
+description = "Common utilities for vid_dup_finder_lib and vid_dup_finder."
+edition = "2021"
+license = "MIT OR Apache-2.0"
+name = "vid_dup_finder_common"
+repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
+version = "0.2.0"
+
+[lib]
+crate-type = ["lib"]
+name = "vid_dup_finder_common"
+path = "src/lib.rs"
+
+
+
+[dependencies]
+image = { version = "0.25", default-features = false }
+fast_image_resize = { version = "3.0.1" }
+imageproc = "0.25"
+itertools = "0.13"
+rand = "0.8"
+
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winbase"] }

@@ -1,0 +1,161 @@
+import { Button, VerticalBox, ComboBox, Spinner, ScrollView, Slider } from "std-widgets.slint";
+
+
+export component ThunkEntry inherits Window {
+    callback clicked;
+    in-out property <string> path: "video_name";
+    in-out property <int> idx: 0;
+    in-out property <string> vid_duration;
+    in-out property <string> jpg_size: "0";
+    in-out property <float> jpg_rank_proportion: 0.5;
+    in-out property <string> avif_size: "0";
+    in-out property <float> avif_rank_proportion: 0.5;
+    in-out property <string> png_size: "0";
+    in-out property <float> png_rank_proportion: 0.5;
+    in-out property <string> canny_size: "0";
+    in-out property <float> canny_rank_proportion: 0.5;
+    in-out property <string> file_size: "0 mb";
+    in-out property <string> vid_resolution: "0x0";
+    in property <image> thumb: @image-url("bus.jpg");
+
+    in property <float> aspect_ratio: 0.9;
+    in-out property <int> thumb_width: 600;
+    // animate thumb_width {
+    //     duration: 50ms;
+    //     easing: ease-in-out;
+    // }
+    in-out property <bool> square: false;
+
+    callback view-curr-vid(string);
+    callback browse-curr-vid(string);
+
+    TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    VerticalLayout {
+
+        spacing: 10px;
+
+        Text {
+            text: "\{path}";
+        }
+
+        HorizontalLayout {
+            alignment: start;
+            VerticalLayout {
+                spacing: 5px;
+                alignment: start;
+                width: 140px;
+                min-height: 200px;
+                Text {
+                    text: "idx: \{root.idx}";
+                }
+
+                Text {
+                    text: "png_size: \{root.png_size}";
+                }
+
+                Text {
+                    text: "avif_size: \{root.avif_size}";
+                }
+
+                Text {
+                    text: "jpg_size: \{root.jpg_size}";
+                }
+
+                Text {
+                    text: "canny_size: \{root.canny_size}";
+                }
+
+                Text {
+                    text: "length: \{root.vid_duration}";
+                }
+
+                Text {
+                    text: "file_size: \{root.file_size}";
+                }
+
+                Text {
+                    text: "resolution: \{root.vid_resolution}";
+                }
+
+                if png_size == "0": Rectangle {
+                    height: 10px;
+                    width: 20px;
+                    background: rgb(0,50,0);
+                }
+
+                if png_size != "0": Rectangle {
+                    height: 10px;
+                    width: 200px * root.png_rank_proportion;
+                    background: rgb(0,200,0);
+                }
+
+                if avif_size == "0": Rectangle {
+                    height: 10px;
+                    width: 20px;
+                    background: rgb(0,50,0);
+                }
+
+                if avif_size != "0": Rectangle {
+                    height: 10px;
+                    width: 200px * root.avif_rank_proportion;
+                    background: rgb(0,200,0);
+                }
+
+                if jpg_size == "0": Rectangle {
+                    height: 10px;
+                    width: 20px;
+                    background: rgb(0,50,0);
+                }
+
+                if jpg_size != "0": Rectangle {
+                    height: 10px;
+                    width: 200px * root.jpg_rank_proportion;
+                    background: rgb(0,200,0);
+                }
+
+                if canny_size == "0": Rectangle {
+                    height: 10px;
+                    width: 20px;
+                    background: rgb(0,50,0);
+                }
+
+                if canny_size != "0": Rectangle {
+                    height: 10px;
+                    width: 200px * root.canny_rank_proportion;
+                    background: rgb(0,200,0);
+                }
+
+                Button {
+                    text: "Watch";
+                    clicked => {
+                        root.view-curr-vid(root.path)
+                    }
+                }
+
+                Button {
+                    text: "Browse";
+                    clicked => {
+                        root.browse-curr-vid(root.path)
+                    }
+                }
+            }
+
+            if square: Image {
+                source: thumb;
+                width: thumb_width * 3px;
+                height: thumb_width * 1px;
+            }
+
+            if !square: Image {
+                source: thumb;
+                width: thumb_width * 1px;
+                height: (thumb_width / aspect_ratio) * 1px;
+            }
+        }
+    }
+}

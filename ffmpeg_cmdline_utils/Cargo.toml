@@ -1,0 +1,29 @@
+[package]
+name = "ffmpeg_cmdline_utils"
+version = "0.3.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Rust wrapper around the commandline interface to FFMPEG. Can be used to read frames from videos into bufrers in rust."
+repository = "https://github.com/Farmadupe/ffmpeg_cmdline_utils"
+readme = "README.md"
+keywords = ["ffmpeg"]
+categories = ["multimedia::video"]
+
+[lib]
+name = "ffmpeg_cmdline_utils"
+path = "src/lib.rs"    
+crate-type = ["lib"]  
+
+
+[features]
+#resize_fast = ["fast_image_resize"]
+#default = ["resize_fast"]
+
+[dependencies]
+thiserror = "2.0"
+image = "0.25"
+serde = { version = "1.0", features = ["derive"] } 
+serde_json = "1.0"
+
+[target.'cfg(windows)'.dependencies]
+winapi = {version = "0.3", features = ["winbase"]}
