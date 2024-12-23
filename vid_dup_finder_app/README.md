@@ -44,9 +44,7 @@ To exclude a file or directory from a search, e.g "dog_vids/beagles"
 To run the gui to examine duplicates:
 * vid_dup_finder --files dog_vids --gui
 
-
-
-## License
+## License (When gui_slint feature is not used)
 
 Licensed under either of
 
@@ -57,9 +55,28 @@ Licensed under either of
 
 at your option.
 
+## License (When gui_slint feature is used)
+
+Licensed under 
+
+ * The terms located at [slint_licenseing/LICENSE.md](slint_licenseing/LICENSE.md)
+
+and either of the following at your option
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+
+
+#
+
 ## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
+## Slint Attribution
+![slint_attribution](MadeWithSlint-logo-whitebg.png)

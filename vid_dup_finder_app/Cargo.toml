@@ -4,10 +4,10 @@ categories = ["command-line-utilities", "multimedia", "visualization"]
 description = "A command line application (and linux-only gui) to find duplicate video files"
 edition = "2021"
 keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
-license = "MIT OR Apache-2.0"
+license-file = "README.md"
 name = "vid_dup_finder"
 repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
-version = "0.2.2"
+version = "0.2.3"
 build = "build.rs"
 
 [features]
