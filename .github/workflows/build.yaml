@@ -29,3 +29,5 @@ jobs:
       run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features gstreamer_backend
     - name: Run tests
       run: cargo test
+    - name: Build Application
+      run: cargo build --release --features gstreamer_backend,gui,parallel_loading
