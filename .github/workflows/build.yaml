@@ -24,8 +24,8 @@ jobs:
            gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
            gstreamer1.0-libav libgstrtspserver-1.0-dev libges-1.0-dev
     - name: Build lib (ffmpeg)
-      run: build --manifest-path vid_dup_finder_lib/Cargo.toml --features ffmpeg_backend
+      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features ffmpeg_backend
     - name: Build lib (gstreamer)
-      run: build --manifest-path vid_dup_finder_lib/Cargo.toml --features gstreamer_backend
+      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features gstreamer_backend
     - name: Run tests
       run: cargo test
