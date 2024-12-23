@@ -59,16 +59,20 @@ at your option.
 
 ## License (When gui_slint feature is used)
 
-Licensed under either of
+Licensed under 
+
+ * The terms located at [slint_licenseing/LICENSE.md](slint_licenseing/LICENSE.md)
+
+and either of the following at your option
 
  * Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
  * MIT license
    ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
-at your option.
 
-The software is additionally licensed under the terms located at [slint_licenseing/LICENSE.md](slint_licenseing/LICENSE.md). By using or distributing the software with the "GUI" feature enabled, you agree to comply with these additional terms.
+
+#
 
 ## Contribution
 
@@ -76,3 +80,5 @@ Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
+## Slint Attribution
+![slint_attribution](MadeWithSlint-logo-whitebg.png)
