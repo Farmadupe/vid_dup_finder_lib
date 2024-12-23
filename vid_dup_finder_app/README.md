@@ -46,7 +46,7 @@ To run the gui to examine duplicates:
 
 
 
-## License
+## License (When gui_slint feature is not used)
 
 Licensed under either of
 
@@ -56,6 +56,19 @@ Licensed under either of
    ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
+
+## License (When gui_slint feature is used)
+
+Licensed under either of
+
+ * Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+ * MIT license
+   ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+
+at your option.
+
+The software is additionally licensed under the terms located at [slint_licenseing/LICENSE.md](slint_licenseing/LICENSE.md). By using or distributing the software with the "GUI" feature enabled, you agree to comply with these additional terms.
 
 ## Contribution
 
