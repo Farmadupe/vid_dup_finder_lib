@@ -44,8 +44,6 @@ To exclude a file or directory from a search, e.g "dog_vids/beagles"
 To run the gui to examine duplicates:
 * vid_dup_finder --files dog_vids --gui
 
-
-
 ## License (When gui_slint feature is not used)
 
 Licensed under either of
