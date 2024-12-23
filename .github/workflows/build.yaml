@@ -30,4 +30,4 @@ jobs:
     - name: Run tests
       run: cargo test
     - name: Build Application
-      run: cargo build --release --features gstreamer_backend,gui,parallel_loading
+      run: cargo build --release --features gstreamer_backend,gui_slint,parallel_loading
