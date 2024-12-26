@@ -11,10 +11,10 @@ use std::{
 use crossbeam_channel::{self, Receiver, Sender};
 
 #[cfg(feature = "gstreamer_backend")]
-use ffmpeg_gst_wrapper::{gst_impl::FrameReaderCfgGst, FrameReadCfgTrait};
+use ffmpeg_gst_wrapper::{gst_impl::FrameReaderCfgGst, BuildFrameReader};
 
 #[cfg(feature = "ffmpeg_backend")]
-use ffmpeg_gst_wrapper::{ffmpeg_impl::FrameReaderCfgFfmpeg, FrameReadCfgTrait};
+use ffmpeg_gst_wrapper::{ffmpeg_impl::FrameReaderCfgFfmpeg, BuildFrameReader};
 use image::{buffer::ConvertBuffer, RgbImage};
 
 use rayon::prelude::*;

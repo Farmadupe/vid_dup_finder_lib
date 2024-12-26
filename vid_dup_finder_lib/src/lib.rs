@@ -130,9 +130,8 @@ mod definitions;
 mod video_hashing;
 
 pub use video_hashing::{
-    matches::match_group::MatchGroup, video_dup_finder::search,
-    video_dup_finder::search_with_references, video_hash::VideoHash,
-    video_hash_builder::CreationOptions, Error,
+    match_group::MatchGroup, video_dup_finder::search, video_dup_finder::search_with_references,
+    video_hash::VideoHash, video_hash_builder::CreationOptions, Error,
 };
 
 #[cfg(feature = "ffmpeg_backend")]

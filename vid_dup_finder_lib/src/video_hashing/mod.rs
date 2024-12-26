@@ -1,14 +1,13 @@
+pub mod frame_extract_util;
 pub mod hash_creation_error_kind;
-pub mod matches;
-mod search_algorithm;
+pub mod match_group;
 pub mod video_dup_finder;
 pub mod video_hash;
+pub mod video_hash_builder;
 
 mod dct_3d;
-
-pub mod frame_extract_util;
 mod raw_dct_ops;
-pub mod video_hash_builder;
+mod search_algorithm;
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

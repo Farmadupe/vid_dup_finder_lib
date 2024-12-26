@@ -78,7 +78,6 @@
 #![deny(clippy::print_stdout)]
 #![deny(clippy::print_stderr)]
 
-pub(crate) mod cache_entry;
 pub(crate) mod cache_metadata;
 pub(crate) mod errors;
 pub(crate) mod file_hash_filesystem_cache;

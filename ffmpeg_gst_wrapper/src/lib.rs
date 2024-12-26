@@ -2,10 +2,7 @@ use std::{fmt::Debug, path::Path, time::Duration};
 
 use image::{GrayImage, RgbImage};
 
-//#[cfg(all(feature = "ffmpeg_backend", feature = "gstreamer_backend"))]
-//compile_error!("feature \"ffmpeg_backend\" and feature \"gstreamer_backend\" cannot be enabled at the same time");
-
-pub trait FrameReadCfgTrait {
+pub trait BuildFrameReader {
     type E: Debug + std::error::Error;
 
     fn from_path(src_path: &Path) -> Self;
@@ -26,7 +23,7 @@ pub mod gst_impl {
     use thiserror::Error;
     use vid_frame_iter::{ImageFns, VideoFrameIterBuilder};
 
-    use crate::FrameReadCfgTrait;
+    use crate::BuildFrameReader;
 
     #[derive(Debug, Clone)]
     pub struct FrameReaderCfgGst(VideoFrameIterBuilder);
@@ -51,7 +48,7 @@ pub mod gst_impl {
         }
     }
 
-    impl FrameReadCfgTrait for FrameReaderCfgGst {
+    impl BuildFrameReader for FrameReaderCfgGst {
         type E = GstError;
 
         fn from_path(src_path: &Path) -> Self {
@@ -140,12 +137,12 @@ pub mod ffmpeg_impl {
     use ffmpeg_cmdline_utils::{FfmpegError, FfmpegFrameReaderBuilder, VideoInfo};
     use image::{GrayImage, RgbImage};
 
-    use crate::FrameReadCfgTrait;
+    use crate::BuildFrameReader;
 
     #[derive(Debug, Clone)]
     pub struct FrameReaderCfgFfmpeg(FfmpegFrameReaderBuilder);
 
-    impl FrameReadCfgTrait for FrameReaderCfgFfmpeg {
+    impl BuildFrameReader for FrameReaderCfgFfmpeg {
         type E = FfmpegError;
 
         fn from_path(src_path: &std::path::Path) -> Self {

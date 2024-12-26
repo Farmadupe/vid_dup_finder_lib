@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+use ffmpeg_gst_wrapper::BuildFrameReader;
 use image::{GenericImage, ImageBuffer, RgbImage};
 use itertools::{Either, Itertools};
 use vid_dup_finder_common::FrameSeqRgb;
@@ -197,7 +197,7 @@ fn grid_images_with_text(images: &[(String, Vec<RgbImage>)]) -> Result<RgbImage,
 }
 
 #[cfg(target_family = "unix")]
-fn to_image_temp<T: FrameReadCfgTrait>(
+fn to_image_temp<T: BuildFrameReader>(
     img_paths: impl IntoIterator<Item = impl AsRef<Path>>,
 ) -> Result<RgbImage, String> {
     use std::num::NonZeroU32;

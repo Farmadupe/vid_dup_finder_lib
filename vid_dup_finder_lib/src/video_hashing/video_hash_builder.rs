@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+use ffmpeg_gst_wrapper::BuildFrameReader;
 use image::GrayImage;
 use vid_dup_finder_common::video_frames_gray::{
     cropdetect_letterbox, cropdetect_motion, cropdetect_none, VdfFrameExt,
@@ -123,7 +123,7 @@ pub mod gstreamer {
     }
 }
 
-pub fn build_frame_reader<T: FrameReadCfgTrait>(
+pub fn build_frame_reader<T: BuildFrameReader>(
     src_path: impl AsRef<Path>,
     opts: CreationOptions,
 ) -> Result<T, Error>
@@ -200,7 +200,7 @@ where
     Ok(builder)
 }
 
-fn iterate_video_frames<T: FrameReadCfgTrait + Clone>(
+fn iterate_video_frames<T: BuildFrameReader + Clone>(
     cfg: &T,
 ) -> Result<impl Iterator<Item = GrayImage>, String> {
     let mut it = cfg.clone().spawn_gray().peekable();
@@ -256,7 +256,7 @@ fn detect_crop(frames: &[GrayImage], detect_method: Cropdetect) -> Option<Crop> 
     }
 }
 
-pub fn gen_hash<T: FrameReadCfgTrait + Clone>(
+pub fn gen_hash<T: BuildFrameReader + Clone>(
     src_path: PathBuf,
     opts: CreationOptions,
 ) -> Result<VideoHash, crate::Error> {

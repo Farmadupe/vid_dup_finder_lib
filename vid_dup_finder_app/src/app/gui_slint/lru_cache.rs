@@ -8,7 +8,7 @@ use std::{
 };
 
 use crossbeam_channel::{Receiver, Select, Sender};
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+use ffmpeg_gst_wrapper::BuildFrameReader;
 use image::{
     buffer::ConvertBuffer,
     codecs::{avif::AvifEncoder, jpeg::JpegEncoder},

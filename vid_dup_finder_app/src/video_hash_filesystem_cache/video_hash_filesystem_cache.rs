@@ -63,6 +63,14 @@ impl VideoHashFilesystemCache {
     ) -> Result<(), VdfCacheError> {
         let content = VdfCacheMetadata::new(cropdetect, skip_forward_amount).to_disk_fmt();
 
+        //make sure that the directory exists
+        if let Some(parent_dir) = metadata_path.as_ref().parent() {
+            std::fs::create_dir_all(parent_dir).map_err(|e| FsCacheErrorKind::CacheFileIo {
+                src: e,
+                path: metadata_path.as_ref().to_path_buf(),
+            })?
+        }
+
         std::fs::write(metadata_path.as_ref(), content).map_err(|e| {
             VdfCacheError::CacheErrror(FsCacheErrorKind::CacheFileIo {
                 src: e,
@@ -240,7 +248,7 @@ impl VideoHashFilesystemCache {
         #[cfg(not(feature = "parallel_loading"))]
         {
             for path in loading_paths {
-                self.fetch_update(&path);
+                self.fetch_update(&path).unwrap();
             }
         }
     }

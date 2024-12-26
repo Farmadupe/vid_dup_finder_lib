@@ -95,7 +95,7 @@ vid_frame_iter = { path = "../vid_frame_iter", optional = true, version = "0.2.0
 
 
 # Gui slint
-slint = { version = "1.7", optional = true }
+slint = { version = "1.9", optional = true }
 lru = { version = "0.12", optional = true }
 
 # Parallel loading

@@ -1,0 +1,4 @@
+{
+    "rust-analyzer.runnables.command": null,
+    "rust-analyzer.check.command": "clippy"
+}

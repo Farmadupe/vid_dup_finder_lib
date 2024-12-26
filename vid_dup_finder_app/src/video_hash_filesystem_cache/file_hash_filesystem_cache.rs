@@ -49,7 +49,11 @@ impl CacheInterface for FileContentCacheIf {
                 "contents caching : {}",
                 src_path.as_ref().to_string_lossy()
             ),
-            Err(e) => warn!(target: "hash_creation", "Hashing failed: {}", e.to_string()),
+            Err(e) => {
+                let err_msg = e.to_string();
+                let src_path_string = src_path.as_ref().to_string_lossy();
+                warn!(target: "hash_creation", "Hashing failed: {err_msg}: {src_path_string}")
+            }
         }
         Ok(hasher.finalize())
     }

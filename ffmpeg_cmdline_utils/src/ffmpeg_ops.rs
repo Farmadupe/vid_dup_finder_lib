@@ -3,26 +3,25 @@ use std::{
     io::prelude::*,
     path::{Path, PathBuf},
     process::{Child, Command, ExitStatus, Stdio},
+    thread::JoinHandle,
     time::{Duration, SystemTime},
 };
 
 #[cfg(target_family = "windows")]
 use std::os::windows::process::CommandExt;
 
-use image::{GrayImage, RgbImage};
+use image::{DynamicImage, GrayImage, RgbImage};
+use wait_timeout::ChildExt;
 use FfmpegCommandName::*;
 use FfmpegError::*;
 
 use crate::*;
 
-const FFPROBE_TIMEOUT_SECS: usize = 60;
+const FFPROBE_TIMEOUT_SECS: usize = 2;
 
 #[derive(Debug)]
 pub struct FfmpegFrameIter {
-    x: u32,
-    y: u32,
-    grayscale: bool,
-    child: std::process::Child,
+    frame_rx: crossbeam_channel::Receiver<DynamicImage>,
     num_frames: u32,
     frames_read: u32,
     timeout_time: SystemTime,
@@ -33,70 +32,30 @@ impl Iterator for FfmpegFrameIter {
     type Item = image::DynamicImage;
 
     fn next(&mut self) -> Option<Self::Item> {
-        //Check exit conditions
-        let read_enough_frames = self.frames_read >= self.num_frames;
-        let exceeded_timeout = SystemTime::now() > self.timeout_time;
-
-        if self.finished || read_enough_frames || exceeded_timeout {
-            self.finished = true;
-            let _kill_error = self.child.kill();
-            let _wait_error = self.child.wait();
+        if self.finished {
             return None;
         }
 
-        let mut raw_buf = if self.grayscale {
-            vec![0u8; (self.x * self.y) as usize]
-        } else {
-            vec![0u8; (self.x * self.y * 3) as usize]
-        };
-
-        // Otherwise wait for the frame until the timeout is exceeded
-        let stdout = self.child.stdout.as_mut().unwrap();
-        let mut buf_head = 0;
-        while buf_head < raw_buf.len() {
-            //abort on timeout.
-            if SystemTime::now() > self.timeout_time {
-                self.finished = true;
-                return None;
-            }
-
-            let slice_to_read_into = &mut raw_buf[buf_head..];
-            match stdout.read(slice_to_read_into) {
-                //something went wrong, or no more data can be read
-                Err(_) | Ok(0) => {
-                    self.finished = true;
-                    return None;
-                }
-
-                Ok(bytes_read) => buf_head += bytes_read,
-            }
-
-            //sleep for a small amount of time;
-            std::thread::sleep(Duration::from_millis(1));
+        //Check exit conditions
+        if self.frames_read >= self.num_frames {
+            self.finished = true;
+            return None;
         }
+
+        if SystemTime::now() > self.timeout_time {
+            self.finished = true;
+            return None;
+        }
+
+        // wait for the frame for up to 10 seconds
+        let Ok(frame) = self.frame_rx.recv_timeout(Duration::from_secs(10)) else {
+            self.finished = true;
+            return None;
+        };
 
         self.frames_read += 1;
 
-        if self.grayscale {
-            let frame = image::DynamicImage::ImageLuma8(
-                GrayImage::from_raw(self.x, self.y, raw_buf).unwrap(),
-            );
-            Some(frame)
-        } else {
-            let frame = image::DynamicImage::ImageRgb8(
-                RgbImage::from_raw(self.x, self.y, raw_buf).unwrap(),
-            );
-            Some(frame)
-        }
-    }
-}
-
-// to prevent accumulation of zombie processes, reap the return code of
-// ffmpeg subcommands (if nothing else has done so already) here
-impl Drop for FfmpegFrameIter {
-    fn drop(&mut self) {
-        let _kill_error = self.child.kill();
-        let _wait_error = self.child.wait();
+        Some(frame)
     }
 }
 
@@ -287,26 +246,49 @@ impl FfmpegFrameReaderBuilder {
             OsStr::new("-")
         ]);
 
-        // println!("{:?}", {
-        //     args.iter()
-        //         .map(|arg| arg.to_string_lossy())
-        //         .collect::<Vec<_>>()
-        //         .join(" ")
-        // });
-
-        let mut child = spawn_ffmpeg_command(Ffmpeg, &args, true)?;
-
-        //Prevent possible lockup if stderr gets full by dropping the
-        //handle from our side
-        std::mem::drop(child.stderr.take());
-
         let (x, y) = stats.resolution();
 
+        let mut child = spawn_ffmpeg_command(Ffmpeg, &args)?;
+
+        //Prevent possible lockup if by draining stderr without buffering it
+        let _drain = std::thread::spawn({
+            let mut stderr = child.stderr.take().expect("failed to get stderr");
+            move || {
+                let _ = std::io::copy(&mut stderr, &mut std::io::sink());
+            }
+        });
+
+        let (frame_tx, frame_rx) = crossbeam_channel::bounded::<DynamicImage>(1);
+        std::thread::spawn({
+            let mut stdout = child.stdout.take().expect("failed to get stdout");
+            move || {
+                loop {
+                    let mut raw_buf = if grayscale {
+                        vec![0u8; (x * y) as usize]
+                    } else {
+                        vec![0u8; (x * y * 3) as usize]
+                    };
+
+                    if let Err(_e) = stdout.read_exact(raw_buf.as_mut_slice()) {
+                        break;
+                    }
+
+                    let frame = if grayscale {
+                        DynamicImage::ImageLuma8(GrayImage::from_raw(x, y, raw_buf).unwrap())
+                    } else {
+                        DynamicImage::ImageRgb8(RgbImage::from_raw(x, y, raw_buf).unwrap())
+                    };
+
+                    if frame_tx.send(frame).is_err() {
+                        break;
+                    }
+                }
+                kill_child_delay(child, Duration::from_secs(1))
+            }
+        });
+
         let frame_iterator = FfmpegFrameIter {
-            x,
-            y,
-            grayscale,
-            child,
+            frame_rx,
             num_frames: self.num_frames.unwrap_or(u32::MAX),
             frames_read: 0,
             timeout_time: SystemTime::now()
@@ -360,7 +342,7 @@ pub fn get_video_stats<P: AsRef<Path>>(src_path: P) -> Result<String, FfmpegErro
         OsStr::new(src_path.as_ref()),
     ];
 
-    let stdout = run_ffmpeg_command(Ffprobe, args, true)?.stdout;
+    let stdout = run_ffmpeg_command(Ffprobe, args)?.stdout;
 
     String::from_utf8(stdout).map_err(|_| Utf8Conversion)
 }
@@ -378,7 +360,7 @@ pub fn is_video_file<P: AsRef<Path>>(src_path: P) -> Result<bool, FfmpegError> {
             OsStr::new(src_path.as_ref())
         ];
 
-        run_ffmpeg_command(Ffprobe, args, true).and_then(|output| {
+        run_ffmpeg_command(Ffprobe, args).and_then(|output| {
             String::from_utf8(output.stdout)
                 .map_err(|_| Utf8Conversion)
                 .map(|s| s.trim().to_string())
@@ -411,12 +393,12 @@ pub fn is_video_file<P: AsRef<Path>>(src_path: P) -> Result<bool, FfmpegError> {
 
 pub fn ffmpeg_and_ffprobe_are_callable() -> bool {
     //check ffprobe is callable.
-    if run_ffmpeg_command(Ffprobe, &[OsStr::new("-version")], true).is_err() {
+    if run_ffmpeg_command(Ffprobe, &[OsStr::new("-version")]).is_err() {
         return false;
     }
 
     //now ffmpeg.
-    if run_ffmpeg_command(Ffmpeg, &[OsStr::new("-version")], true).is_err() {
+    if run_ffmpeg_command(Ffmpeg, &[OsStr::new("-version")]).is_err() {
         return false;
     }
 
@@ -438,25 +420,15 @@ impl FfmpegCommandName {
     }
 }
 
-fn spawn_ffmpeg_command(
-    name: FfmpegCommandName,
-    args: &[&OsStr],
-    stderr_null: bool,
-) -> Result<Child, FfmpegError> {
+fn spawn_ffmpeg_command(name: FfmpegCommandName, args: &[&OsStr]) -> Result<Child, FfmpegError> {
     use FfmpegError::*;
-
-    let stderr_cfg = if stderr_null {
-        Stdio::null()
-    } else {
-        Stdio::piped()
-    };
 
     let mut command = Command::new(name.as_os_str());
     command
         .args(args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(stderr_cfg);
+        .stderr(Stdio::piped());
 
     //do not spawn a command window on windows when when in a gui application
     #[cfg(target_family = "windows")]
@@ -470,6 +442,27 @@ fn spawn_ffmpeg_command(
     })
 }
 
+/// kill a function after a delay
+fn kill_child_delay(
+    mut child: Child,
+    delay: Duration,
+) -> JoinHandle<Result<ExitStatus, std::io::Error>> {
+    let end_time = std::time::Instant::now() + delay;
+    std::thread::spawn(move || loop {
+        if std::time::Instant::now() > end_time {
+            let _ = child.kill();
+        }
+
+        match child.try_wait() {
+            Ok(None) => {}
+            Ok(Some(status)) => return Ok(status),
+            Err(e) => return Err(e),
+        }
+
+        std::thread::sleep(Duration::from_millis(100));
+    })
+}
+
 struct FfmpegOutput {
     _stderr: Vec<u8>,
     stdout: Vec<u8>,
@@ -477,11 +470,7 @@ struct FfmpegOutput {
 
 type FfmpegCmdResult = Result<FfmpegOutput, FfmpegError>;
 
-fn run_ffmpeg_command(
-    name: FfmpegCommandName,
-    args: &[&OsStr],
-    stderr_null: bool,
-) -> FfmpegCmdResult {
+fn run_ffmpeg_command(name: FfmpegCommandName, args: &[&OsStr]) -> FfmpegCmdResult {
     fn truncate_ffmpeg_err_msg(stderr: Vec<u8>) -> FfmpegError {
         match std::str::from_utf8(&stderr) {
             Ok(error_text) => FfmpegInternal(error_text.chars().take(500).collect::<String>()),
@@ -490,79 +479,48 @@ fn run_ffmpeg_command(
     }
 
     //Wait for the ffmpeg operation to complete FFMPEG_TIMEOUT_SECS
-    let mut child = spawn_ffmpeg_command(name, args, stderr_null)?;
+    let mut child = spawn_ffmpeg_command(name, args)?;
 
     //Accumulators for output
     let mut stdout = child.stdout.take().expect("Failed to obtain stdout");
+    let mut stderr = child.stderr.take().expect("Failed to obtain stderr");
 
-    let mut stderr = (!stderr_null).then(|| child.stderr.take().expect("Failed to obtain stderr"));
+    // let cmd_status = kill_child_delay(child, Duration::from_secs(FFPROBE_TIMEOUT_SECS as u64));
 
-    let mut timeout_counter_secs = 0;
-
-    //We will assume that ffmpeg/ffprobe will usually complete in the first 1 sec. To keep this program responsive we will check for results at a rate of 100hz.
-    //Then we will switch to checking at 1 Hz.
-    let thread = std::thread::spawn(move || -> std::io::Result<ExitStatus> {
-        let max_initial_fast_counts = 50000;
-        let mut initial_fast_counts = 0;
-        let mut maybe_status;
-        while timeout_counter_secs < FFPROBE_TIMEOUT_SECS {
-            maybe_status = child.try_wait();
-            match maybe_status {
-                Err(e) => return Err(e),
-                Ok(None) => {
-                    if initial_fast_counts < max_initial_fast_counts {
-                        std::thread::sleep(Duration::from_millis(1));
-                        initial_fast_counts += 1;
-                        if initial_fast_counts == max_initial_fast_counts {
-                            timeout_counter_secs += 1;
-                        }
-                    } else {
-                        std::thread::sleep(Duration::from_millis(1));
-                        timeout_counter_secs += 1;
-                    }
-                }
-                Ok(Some(s)) => return Ok(s),
-            }
-        }
-
-        //timed out
-        Err(std::io::Error::from(std::io::ErrorKind::TimedOut))
+    let read_stdout = std::thread::spawn(move || -> std::io::Result<Vec<u8>> {
+        let mut buf = vec![];
+        stdout.read_to_end(&mut buf)?;
+        Ok(buf)
     });
 
-    //read from stdout and stderr
-    let mut stdout_done = false;
-    let mut stderr_done = stderr_null;
+    let read_stderr = std::thread::spawn(move || -> std::io::Result<Vec<u8>> {
+        let mut buf = vec![];
+        stderr.read_to_end(&mut buf)?;
+        Ok(buf)
+    });
 
-    //Buffer for stdout and stderr
-    let mut read_buf = [0u8; 4096];
-    let mut stdout_acc = vec![];
-    let mut stderr_acc = vec![];
+    let stdout = read_stdout
+        .join()
+        .expect("thread couldn't join")
+        .map_err(|e| FfmpegError::Io(e.to_string()))?;
+    let stderr = read_stderr
+        .join()
+        .expect("thread couldn't join")
+        .map_err(|e| FfmpegError::Io(e.to_string()))?;
+    // let exit_status = cmd_status.join().expect("thread couldn't join");
 
-    while !(stdout_done && stderr_done) {
-        if !stdout_done {
-            match stdout.read(&mut read_buf) {
-                Err(_) | Ok(0) => stdout_done = true,
-                Ok(amount) => {
-                    stdout_acc
-                        .write_all(&read_buf[..amount])
-                        .expect("failed to append to string");
-                }
+    let exit_status: Result<ExitStatus, std::io::Error> =
+        match child.wait_timeout(Duration::from_secs(FFPROBE_TIMEOUT_SECS as u64)) {
+            Ok(Some(exit_status)) => Ok(exit_status),
+            Ok(None) => {
+                let _ = child.kill();
+                child.wait()
             }
-        }
+            Err(e) => Err(e),
+        };
 
-        if !stderr_done {
-            match stderr.as_mut().unwrap().read(&mut read_buf) {
-                Err(_) | Ok(0) => stderr_done = true,
-                Ok(amount) => {
-                    stderr_acc
-                        .write_all(&read_buf[..amount])
-                        .expect("failed to append to string");
-                }
-            }
-        }
-    }
-
-    let exit_status = thread.join().expect("thread couldn't join");
+    // let exit_status: Result<_, std::io::Error> = Ok(child.wait().expect("thread couldn't join"));
+    //  dbg!(&exit_status);
 
     match exit_status {
         Err(e) => match e.kind() {
@@ -573,12 +531,12 @@ fn run_ffmpeg_command(
         Ok(status) => {
             if status.success() {
                 Ok(FfmpegOutput {
-                    stdout: stdout_acc,
-                    _stderr: stderr_acc,
+                    stdout,
+                    _stderr: stderr,
                 })
             } else {
                 //sometimes ffmpeg creates very long error messages. Limit them to the first 500 characters
-                Err(truncate_ffmpeg_err_msg(stderr_acc))
+                Err(truncate_ffmpeg_err_msg(stderr))
             }
         }
     }

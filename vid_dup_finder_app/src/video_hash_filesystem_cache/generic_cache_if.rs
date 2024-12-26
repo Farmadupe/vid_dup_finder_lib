@@ -31,17 +31,22 @@ impl CacheInterface for GenericCacheIf {
         };
 
         #[cfg(feature = "gstreamer_backend")]
-        let new_entry = gstreamer_builder::VideoHashBuilder::from_options(opts).hash(src_path);
+        let new_entry =
+            gstreamer_builder::VideoHashBuilder::from_options(opts).hash(src_path.clone());
 
         #[cfg(feature = "ffmpeg_backend")]
-        let new_entry = ffmpeg_builder::VideoHashBuilder::from_options(opts).hash(src_path);
+        let new_entry = ffmpeg_builder::VideoHashBuilder::from_options(opts).hash(src_path.clone());
 
         match &new_entry {
             Ok(hash) => info!(target: "hash_creation",
                 "inserting : {}",
                 hash.src_path().display()
             ),
-            Err(e) => warn!(target: "hash_creation", "Hashing failed: {}", e.to_string()),
+            Err(e) => {
+                let err_msg = e.to_string();
+                let src_path_string = src_path.to_string_lossy();
+                warn!(target: "hash_creation", "Hashing failed: {err_msg}: {src_path_string}")
+            }
         }
 
         new_entry
