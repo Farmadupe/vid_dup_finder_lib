@@ -132,7 +132,7 @@ impl Crop {
         xs.flat_map(move |x| ys.clone().map(move |y| (x, y)))
     }
 
-    pub fn enumerate_coords_excluded(&self) -> impl Iterator<Item = (u32, u32)> + use<> {
+    pub fn enumerate_coords_excluded(&self) -> impl Iterator<Item = (u32, u32)> {
         let (orig_x, orig_y) = self.orig_res;
 
         let x0 = 0;
