@@ -33,4 +33,8 @@ pub enum FfmpegError {
     /// Failed to obtain video information.
     #[error("Failed to get video properties")]
     Info(#[from] VideoInfoError),
+
+    /// Other
+    #[error("Ffmpeg/ffprobe error: {0}")]
+    Other(String),
 }
