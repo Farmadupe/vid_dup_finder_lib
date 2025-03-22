@@ -9,11 +9,8 @@ use std::{
 
 use crossbeam_channel::{Receiver, Select, Sender};
 
-#[cfg(feature = "gstreamer_backend")]
-use ffmpeg_gst_wrapper::{get_duration_gst, get_resolution_gst};
+use ffmpeg_gst_wrapper::{get_duration, get_resolution};
 
-#[cfg(feature = "ffmpeg_backend")]
-use ffmpeg_gst_wrapper::{get_duration_ffmpeg, get_resolution_ffmpeg};
 use image::{
     buffer::ConvertBuffer,
     codecs::{avif::AvifEncoder, jpeg::JpegEncoder},
@@ -400,16 +397,7 @@ pub fn start_cache_thread(
                                 .thunk
                                 .entries()
                                 .iter()
-                                .map(|p| {
-                                    cfg_if::cfg_if! {
-                                        if #[cfg(feature = "gstreamer_backend")] {
-                                            let duration = get_duration_gst(&p);
-                                        } else if #[cfg(feature = "ffmpeg_backend")] {
-                                            let duration = get_duration_ffmpeg(&p);
-                                        }
-                                    }
-                                    duration.unwrap_or_default()
-                                })
+                                .map(|p| get_duration(&p).unwrap_or_default())
                                 .collect::<Vec<_>>();
 
                             let _ = duration_cache
@@ -424,16 +412,7 @@ pub fn start_cache_thread(
                                 .thunk
                                 .entries()
                                 .iter()
-                                .map(|p| {
-                                    cfg_if::cfg_if! {
-                                        if #[cfg(feature = "gstreamer_backend")] {
-                                            let resolution = get_resolution_gst(&p);
-                                        } else if #[cfg(feature = "ffmpeg_backend")] {
-                                            let resolution = get_resolution_ffmpeg(&p);
-                                        }
-                                    }
-                                    resolution.unwrap_or_default()
-                                })
+                                .map(|p| get_resolution(&p).unwrap_or_default())
                                 .collect::<Vec<_>>();
 
                             let _ = resolution_cache

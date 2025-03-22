@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ffmpeg_gst_wrapper::{get_duration_ffmpeg, get_duration_gst, FrameReadCfg};
+use ffmpeg_gst_wrapper::{get_duration, FrameReadCfg};
 use image::GrayImage;
 use vid_dup_finder_common::video_frames_gray::{
     cropdetect_letterbox, cropdetect_motion, cropdetect_none, VdfFrameExt,
@@ -91,15 +91,9 @@ where
     let src_path = src_path.as_ref();
     let mut builder = FrameReadCfg::from_path(src_path);
 
-    // The video duration influcences the exact frames chosen to build the hash
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "gstreamer_backend")] {
-            let vid_duration = get_duration_ffmpeg(src_path);
-        } else if #[cfg(feature = "ffmpeg_backend")] {
-            let vid_duration  = get_duration_ffmpeg(src_path);
-        }
-    }
-    let vid_duration = vid_duration.map_err(|_e| Error::NotVideo)?.as_secs_f64();
+    let vid_duration = get_duration(src_path)
+        .map_err(|_e| Error::NotVideo)?
+        .as_secs_f64();
 
     //println!("duration: {vid_duration}");
 
@@ -163,13 +157,7 @@ where
 }
 
 fn iterate_video_frames(cfg: &FrameReadCfg) -> Result<impl Iterator<Item = GrayImage>, String> {
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "gstreamer_backend")] {
-            let mut it = cfg.clone().spawn_gray_gst().peekable();
-        } else if #[cfg(feature = "ffmpeg_backend")] {
-            let mut it = cfg.clone().spawn_gray_ffmpeg().peekable();
-        }
-    }
+    let mut it = cfg.clone().spawn_gray().peekable();
 
     match it.peek() {
         Some(Err(e)) => Err(format!("{e:?}")),
@@ -229,15 +217,7 @@ pub fn gen_hash(src_path: PathBuf, opts: CreationOptions) -> Result<VideoHash, c
     let frames = iterate_video_frames(&frame_read_cfg).map_err(VidProc)?;
     let frames = crop_video_frames(frames, opts.cropdetect)?;
 
-    cfg_if::cfg_if! {
-        if #[cfg(feature = "gstreamer_backend")] {
-            let duration = get_duration_gst(&src_path);
-        } else if #[cfg(feature = "ffmpeg_backend")] {
-            let duration = get_duration_ffmpeg(&src_path);
-        }
-    }
-
-    let duration = duration.map_err(|e| VidProc(format!("{e:?}")))?;
+    let duration = get_duration(&src_path).map_err(|e| VidProc(format!("{e:?}")))?;
 
     VideoHash::from_frames(frames, src_path, duration.as_secs() as u32)
 }
