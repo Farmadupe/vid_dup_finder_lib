@@ -184,7 +184,6 @@ impl Crop {
 
 impl Default for Crop {
     //an arbitrary 'enormous' crop suitable for initializing a fold/reduce
-    #[must_use]
     fn default() -> Self {
         Self {
             orig_res: (u32::MAX, u32::MAX),

@@ -12,7 +12,7 @@ use vid_dup_finder_common::crop_resize_flat;
 use vid_dup_finder_common::Crop;
 
 use crate::{
-    definitions::{DCT_SIZE, HASH_BITS, HASH_QWORDS},
+    definitions::{DCT_SIZE, HASH_BITS, HASH_WORDS},
     video_hashing::dct_3d::Dct3d,
     Error::NotEnoughFrames,
 };
@@ -26,7 +26,7 @@ use image::GrayImage;
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Serialize, Deserialize)]
 pub struct VideoHash {
     //#[serde(with = "BigArray")]
-    hash: [u64; HASH_QWORDS as usize],
+    hash: [usize; HASH_WORDS as usize],
     src_path: PathBuf,
     duration: u32,
 }
@@ -34,7 +34,7 @@ pub struct VideoHash {
 impl Default for VideoHash {
     fn default() -> Self {
         Self {
-            hash: [0; HASH_QWORDS as usize],
+            hash: [0; HASH_WORDS as usize],
             src_path: PathBuf::new(),
             duration: Default::default(),
         }
@@ -63,7 +63,7 @@ impl VideoHash {
         let dct = Dct3d::from_images(frames_64x64).ok_or(NotEnoughFrames)?;
 
         // Pack the raw bits of the hash into a bit vector.
-        let mut bitarr: BitArray<[u64; HASH_QWORDS as usize], Lsb0> = BitArray::ZERO;
+        let mut bitarr: BitArray<[usize; HASH_WORDS as usize], Lsb0> = BitArray::ZERO;
         assert!(bitarr.len() >= HASH_BITS as usize);
         for (mut bitarr_val, hash_bit) in bitarr.iter_mut().zip(dct.hash_bits()) {
             *bitarr_val = hash_bit;
@@ -165,7 +165,7 @@ impl VideoHash {
 
     fn from_components(
         src_path: impl AsRef<Path>,
-        hash_bits: BitArray<[u64; HASH_QWORDS as usize], Lsb0>,
+        hash_bits: BitArray<[usize; HASH_WORDS as usize], Lsb0>,
         duration: u32,
     ) -> Self {
         Self {
@@ -244,7 +244,7 @@ pub mod test_util {
     use std::path::Path;
 
     use super::VideoHash;
-    use crate::video_hashing::video_hash::{HASH_BITS, HASH_QWORDS};
+    use crate::video_hashing::video_hash::{HASH_BITS, HASH_WORDS};
     use bitvec::prelude::*;
     use rand::prelude::*;
 
@@ -265,7 +265,7 @@ pub mod test_util {
         }
 
         pub fn full_hash(name: impl AsRef<Path>) -> Self {
-            Self::from_components(name, BitArray::new([u64::MAX; HASH_QWORDS as usize]), 0)
+            Self::from_components(name, BitArray::new([usize::MAX; HASH_WORDS as usize]), 0)
         }
 
         pub fn empty_hash(name: impl AsRef<Path>) -> Self {
@@ -275,10 +275,10 @@ pub mod test_util {
         //generate a set of temporal hashes, each with a given distance from the empty hash.
         #[must_use]
         pub fn hash_with_spatial_distance(&self, target_distance: u32, rng: &mut StdRng) -> Self {
-            let mut flip_a_bit = |bits: &mut [u64]| {
+            let mut flip_a_bit = |bits: &mut [usize]| {
                 let chosen_qword = rng.gen_range(0..bits.len());
-                let chosen_bit = rng.gen_range(0..64);
-                bits[chosen_qword] ^= 2u64.pow(chosen_bit);
+                let chosen_bit = rng.gen_range(0..usize::BITS);
+                bits[chosen_qword] ^= 2usize.pow(chosen_bit);
             };
 
             //flip bits until the required distance is reached
@@ -295,7 +295,7 @@ pub mod test_util {
         pub fn random_hash(rng: &mut StdRng) -> Self {
             use std::path::PathBuf;
 
-            let mut hash: BitArray<[u64; HASH_QWORDS as usize], Lsb0> = BitArray::ZERO;
+            let mut hash: BitArray<[usize; HASH_WORDS as usize], Lsb0> = BitArray::ZERO;
             for mut bit in hash.iter_mut().take(HASH_BITS as usize) {
                 *bit = rng.gen_bool(0.5);
             }
@@ -310,7 +310,7 @@ pub mod test_util {
 }
 
 //Utility helper: Get the hamming distance between two bitstrings.
-fn hamming_distance<const N: usize>(x: &[u64; N], y: &[u64; N]) -> u32 {
+fn hamming_distance<const N: usize>(x: &[usize; N], y: &[usize; N]) -> u32 {
     x.iter().zip(y.iter()).fold(0, |acc, (x, y)| {
         let difference = x ^ y;
         let set_bits = difference.count_ones();

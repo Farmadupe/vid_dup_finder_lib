@@ -511,7 +511,6 @@ impl ImageFns for GrayFrame {
         flat
     }
 
-    #[must_use]
     fn to_imagebuffer(&self) -> Self::IB {
         let width = self.0.width();
         let height = self.0.height();
@@ -679,7 +678,6 @@ impl ImageFns for RgbFrame {
         }
     }
 
-    #[must_use]
     fn to_imagebuffer(&self) -> Self::IB {
         let width = self.0.width();
         let height = self.0.height();

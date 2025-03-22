@@ -50,7 +50,7 @@ compile_error!("features 'hash_size_6' and 'hash_size_10' cannot be selected at 
 pub const TOLERANCE_SCALING_FACTOR: f64 = (HASH_SIZE.pow(3)) as f64;
 
 pub const HASH_BITS: u32 = HASH_SIZE.pow(3);
-pub const HASH_QWORDS: u32 = HASH_BITS.div_ceil(64);
+pub const HASH_WORDS: u32 = HASH_BITS.div_ceil(usize::BITS);
 
 /// Algorithms to detect [black bars](https://en.wikipedia.org/wiki/Letterboxing_(filming))  around the edges of video frames
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, enum_utils::FromStr)]
