@@ -212,7 +212,7 @@ impl VideoHash {
         // to return, however it doesn't seem to be possible to construct a BitVec from a
         // slice with a non-multiple-of-the-raw-storage-size length
 
-        let full_raw_slice = BitSlice::<u64, Lsb0>::from_slice(&self.hash);
+        let full_raw_slice = BitSlice::<usize, Lsb0>::from_slice(&self.hash);
         let correct_size_slice = &full_raw_slice[..HASH_BITS as usize];
 
         correct_size_slice.iter().by_vals()
@@ -225,7 +225,7 @@ impl VideoHash {
     }
 
     #[must_use]
-    pub fn hash_bits(&self) -> &BitSlice<u64, Lsb0> {
+    pub fn hash_bits(&self) -> &BitSlice<usize, Lsb0> {
         &BitSlice::from_slice(&self.hash)[..HASH_BITS as usize]
     }
 }
