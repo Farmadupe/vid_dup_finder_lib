@@ -94,39 +94,7 @@ impl VideoInfo {
         // If the video metadata declares that a video is rotated, then FFMPEG will conveniently autorotate
         // each frame for us, however we will have to remember to swap around x and y axis if the rotation is
         // 90 or 270
-        let rotation = {
-            //extract the rotation from the JSON
-            let rotation = Self::first_video(&stats_parsed).and_then(|video_stream| {
-                video_stream
-                    .get("side_data_list")
-                    .and_then(|y| y.get(0).and_then(|x| x.get("rotation").cloned()))
-            });
-
-            //if the rotation is found, it may either be a JSON String or JSON number, so unify
-            //them here.
-            let rotation = rotation.map(|rotation| match rotation {
-                Value::Number(val) => val.as_i64().unwrap(),
-                Value::String(val) => val.parse::<i64>().unwrap(),
-                _ => panic!(
-                    "got invalid json value type for video rotation. Expected: String or Number"
-                ),
-            });
-
-            //now make sure that the value is one of the four cardinal directions and return it
-            //(or if no rotation is specified, return 0/360)
-            match rotation {
-                None => FfmpegVideoRotation::Rot0,
-                Some(0) => FfmpegVideoRotation::Rot0,
-                Some(90) | Some(-270) => FfmpegVideoRotation::Rot90,
-                Some(180) | Some(-180) => FfmpegVideoRotation::Rot180,
-                Some(-90) | Some(270) => FfmpegVideoRotation::Rot270,
-                Some(_) => panic!(
-                    "ffprobe failure. Got unexpected rotation. src_path: {}, rotation: {:?}",
-                    src_path.as_ref().display(),
-                    rotation
-                ),
-            }
-        };
+        let rotation = Self::parse_rotation(&stats_parsed)?;
 
         let resolution = {
             let first_width = Self::first_vid_u32(&stats_parsed, "width").unwrap_or(0);
@@ -144,6 +112,45 @@ impl VideoInfo {
             file_size,
             resolution,
         })
+    }
+
+    fn parse_rotation(stats_parsed: &Value) -> Result<FfmpegVideoRotation, FfmpegError> {
+        //extract the rotation from the JSON
+        let Some(json_data) = Self::first_video(&stats_parsed).and_then(|video_stream| {
+            video_stream
+                .get("side_data_list")
+                .and_then(|y| y.get(0).and_then(|x| x.get("rotation").cloned()))
+        }) else {
+            return Ok(Rot0);
+        };
+
+        //if the rotation is found, it may either be a JSON String or JSON number, so unify
+        //them here.
+        let rotation = match json_data {
+            Value::Number(val) => val.as_i64().unwrap(),
+            Value::String(val) => val.parse::<i64>().unwrap(),
+            _ => {
+                return Err(FfmpegError::Other(format!(
+                    "Failed to parse video rotation"
+                )))
+            }
+        };
+
+        //now make sure that the value is one of the four cardinal directions and return it
+        //(or if no rotation is specified, return 0/360)
+        let ret = match rotation {
+            0 => FfmpegVideoRotation::Rot0,
+            90 | -270 => FfmpegVideoRotation::Rot90,
+            180 | -180 => FfmpegVideoRotation::Rot180,
+            -90 | 270 => FfmpegVideoRotation::Rot270,
+            _ => {
+                return Err(FfmpegError::Other(format!(
+                    "Failed to parse video rotation"
+                )))
+            }
+        };
+
+        Ok(ret)
     }
 
     /// The duration of the video in seconds
