@@ -16,8 +16,6 @@ version = "0.2.0"
 "gstreamer_backend" = ["gstreamer", "ffmpeg_gst_wrapper/gstreamer_backend"]
 "default" = ["ffmpeg_backend"]
 "debug_hash_generation" = []
-"hash_size_6" = []
-"hash_size_10" = []
 
 
 [lib]

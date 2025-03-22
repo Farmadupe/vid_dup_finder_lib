@@ -34,14 +34,6 @@ gstreamer_backend = [
 default = ["parallel_loading", "ffmpeg_backend", "gui_slint"]
 print_timings = []
 
-hash_size_10 = [
-    "vid_dup_finder_lib/hash_size_10"
-]
-
-hash_size_6 = [
-    "vid_dup_finder_lib/hash_size_6"
-]
-
 [[bin]]
 name = "vid_dup_finder"
 
