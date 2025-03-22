@@ -8,7 +8,12 @@ use std::{
 };
 
 use crossbeam_channel::{Receiver, Select, Sender};
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+
+#[cfg(feature = "gstreamer_backend")]
+use ffmpeg_gst_wrapper::{get_duration_gst, get_resolution_gst};
+
+#[cfg(feature = "ffmpeg_backend")]
+use ffmpeg_gst_wrapper::{get_duration_ffmpeg, get_resolution_ffmpeg};
 use image::{
     buffer::ConvertBuffer,
     codecs::{avif::AvifEncoder, jpeg::JpegEncoder},
@@ -392,27 +397,20 @@ pub fn start_cache_thread(
                                 .unwrap();
 
                             let durations = entry
-                                    .thunk
-                                    .entries()
-                                    .iter()
-                                    .map(|p| {
-                                        #[cfg(feature="gstreamer_backend")]
-                                        let val = ffmpeg_gst_wrapper::gst_impl::FrameReaderCfgGst::from_path(
-                                            p,
-                                        )
-                                        .get_duration()
-                                        .unwrap_or_default();
-
-                                        #[cfg(feature="ffmpeg_backend")]
-                                        let val = ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg::from_path(
-                                            p,
-                                        )
-                                        .get_duration()
-                                        .unwrap_or_default();
-
-                                    val
-                                    })
-                                    .collect::<Vec<_>>();
+                                .thunk
+                                .entries()
+                                .iter()
+                                .map(|p| {
+                                    cfg_if::cfg_if! {
+                                        if #[cfg(feature = "gstreamer_backend")] {
+                                            let duration = get_duration_gst(&p);
+                                        } else if #[cfg(feature = "ffmpeg_backend")] {
+                                            let duration = get_duration_ffmpeg(&p);
+                                        }
+                                    }
+                                    duration.unwrap_or_default()
+                                })
+                                .collect::<Vec<_>>();
 
                             let _ = duration_cache
                                 .lock()
@@ -422,25 +420,21 @@ pub fn start_cache_thread(
                                 .send(GuiRsp::VidDuration(entry.clone(), durations))
                                 .unwrap();
 
-                            let resolutions = entry.thunk.entries().iter().map(|p| {
-                                #[cfg(feature="gstreamer_backend")]
-                                let val = ffmpeg_gst_wrapper::gst_impl::FrameReaderCfgGst::from_path(
-                                    p,
-                                )
-                                .get_resolution()
-                                .unwrap_or_default();
-
-                                #[cfg(feature="ffmpeg_backend")]
-                                let val = ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg::from_path(
-                                    p,
-                                )
-                                .get_resolution()
-                                .unwrap_or_default();
-
-                            val
-
-
-                            }).collect::<Vec<_>>();
+                            let resolutions = entry
+                                .thunk
+                                .entries()
+                                .iter()
+                                .map(|p| {
+                                    cfg_if::cfg_if! {
+                                        if #[cfg(feature = "gstreamer_backend")] {
+                                            let resolution = get_resolution_gst(&p);
+                                        } else if #[cfg(feature = "ffmpeg_backend")] {
+                                            let resolution = get_resolution_ffmpeg(&p);
+                                        }
+                                    }
+                                    resolution.unwrap_or_default()
+                                })
+                                .collect::<Vec<_>>();
 
                             let _ = resolution_cache
                                 .lock()

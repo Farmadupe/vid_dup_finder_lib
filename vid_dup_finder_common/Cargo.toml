@@ -17,8 +17,8 @@ path = "src/lib.rs"
 image = { version = "0.25", default-features = false }
 fast_image_resize = { version = "3.0.1" }
 imageproc = "0.25"
-itertools = "0.13"
-rand = "0.8"
+itertools = "0.14"
+rand = "0.9"
 
 
 [target.'cfg(windows)'.dependencies]

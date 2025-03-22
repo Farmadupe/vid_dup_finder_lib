@@ -27,7 +27,7 @@
 //! use vid_dup_finder_lib::VideoHash;
 //! use vid_dup_finder_lib::MatchGroup;
 //! use vid_dup_finder_lib::CreationOptions;
-//! use vid_dup_finder_lib::ffmpeg_builder::VideoHashBuilder;
+//! use vid_dup_finder_lib::VideoHashBuilder;
 //!
 //!
 //! # use std::ffi::OsStr;
@@ -132,14 +132,8 @@ mod video_hashing;
 pub use video_hashing::{
     matches::match_group::MatchGroup, video_dup_finder::search,
     video_dup_finder::search_with_references, video_hash::VideoHash,
-    video_hash_builder::CreationOptions, Error,
+    video_hash_builder::CreationOptions, video_hash_builder::VideoHashBuilder, Error,
 };
-
-#[cfg(feature = "ffmpeg_backend")]
-pub use video_hashing::video_hash_builder::ffmpeg as ffmpeg_builder;
-
-#[cfg(feature = "gstreamer_backend")]
-pub use video_hashing::video_hash_builder::gstreamer as gstreamer_builder;
 
 pub use definitions::{
     Cropdetect, DEFAULT_SEARCH_TOLERANCE, DEFAULT_VID_HASH_DURATION, DEFAULT_VID_HASH_SKIP_FORWARD,

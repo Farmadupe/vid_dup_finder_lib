@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
 use image::{GenericImage, ImageBuffer, RgbImage};
 use itertools::{Either, Itertools};
 use vid_dup_finder_common::FrameSeqRgb;
@@ -27,14 +26,7 @@ impl MatchGroupExt for MatchGroup {
     #[cfg(target_family = "unix")]
     fn to_image(&self) -> Result<RgbImage, String> {
         #[cfg(feature = "ffmpeg_backend")]
-        return to_image_temp::<ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg>(
-            self.contained_paths(),
-        );
-
-        #[cfg(feature = "gstreamer_backend")]
-        return to_image_temp::<ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg>(
-            self.contained_paths(),
-        );
+        return to_image_temp(self.contained_paths());
     }
 
     #[cfg(target_family = "windows")]
@@ -197,10 +189,12 @@ fn grid_images_with_text(images: &[(String, Vec<RgbImage>)]) -> Result<RgbImage,
 }
 
 #[cfg(target_family = "unix")]
-fn to_image_temp<T: FrameReadCfgTrait>(
+fn to_image_temp(
     img_paths: impl IntoIterator<Item = impl AsRef<Path>>,
 ) -> Result<RgbImage, String> {
     use std::num::NonZeroU32;
+
+    use ffmpeg_gst_wrapper::FrameReadCfg;
 
     let all_thumbs: Vec<(String, Vec<RgbImage>)> = img_paths
         .into_iter()
@@ -208,7 +202,7 @@ fn to_image_temp<T: FrameReadCfgTrait>(
             let src_path = src_path.as_ref();
 
             let get_frames = |fps| {
-                let mut builder = T::from_path(src_path);
+                let mut builder = FrameReadCfg::from_path(src_path);
                 builder.fps(fps);
                 let mut frame_iterator = builder.spawn_rgb().peekable();
 

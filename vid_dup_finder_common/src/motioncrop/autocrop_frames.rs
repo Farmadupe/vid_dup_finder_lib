@@ -269,7 +269,7 @@ impl MotiondetectCrop {
         };
 
         if let Some(debug_dir) = debug_img_dir() {
-            let rand = rand::random::<usize>();
+            let rand = rand::random::<u64>();
 
             std::fs::create_dir_all(&debug_dir).ok();
 

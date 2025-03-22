@@ -747,11 +747,6 @@ impl MatchDb {
             }
         }
 
-        #[cfg(feature = "print_timings")]
-        println!(
-            "unmatched fix time: {}",
-            unmatched_fix_start.elapsed().as_secs_f64()
-        );
         Ok(())
     }
 }
