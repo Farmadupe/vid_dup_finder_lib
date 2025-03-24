@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+use ffmpeg_gst_wrapper::{get_duration, FrameReadCfg};
 use image::GrayImage;
 use vid_dup_finder_common::video_frames_gray::{
     cropdetect_letterbox, cropdetect_motion, cropdetect_none, VdfFrameExt,
@@ -62,80 +62,36 @@ impl std::default::Default for CreationOptions {
     }
 }
 
-/// A factory for video hashes, using the ffmpeg backend. (This is the preferred backend as it is more reliable than gstreamer)
-///
-/// Reccomend to always use the the default constructor [`ffmpeg::VideoHashBuilder::default`] unless supplying custom options
-#[cfg(feature = "ffmpeg_backend")]
-pub mod ffmpeg {
-    use std::path::PathBuf;
-
-    use ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg;
-
-    use crate::{VideoHash, VideoHashResult};
-
-    use super::CreationOptions;
-
-    #[derive(Default)]
-    pub struct VideoHashBuilder {
-        options: CreationOptions,
-    }
-
-    impl VideoHashBuilder {
-        /// Create a video hash builder with the selected [`CreationOptions`]
-        pub fn from_options(options: CreationOptions) -> Self {
-            Self { options }
-        }
-
-        /// Create a hash of the video on disk at the given path.
-        pub fn hash(&self, src_path: PathBuf) -> VideoHashResult<VideoHash> {
-            super::gen_hash::<FrameReaderCfgFfmpeg>(src_path, self.options)
-        }
-    }
-}
-
 /// A factory for video hashes, using the gstreamer backend (This is backend is approximately 10% faster but is harder to integrate and is vulnerable to crashes in plugins and libglib etc)
 ///
 /// Reccomend to always use the the default constructor [`gstreamer::VideoHashBuilder::default`] unless supplying custom options
-#[cfg(feature = "gstreamer_backend")]
-pub mod gstreamer {
-    use std::path::PathBuf;
 
-    use ffmpeg_gst_wrapper::gst_impl::FrameReaderCfgGst;
+#[derive(Default)]
+pub struct VideoHashBuilder {
+    options: CreationOptions,
+}
 
-    use crate::{VideoHash, VideoHashResult};
-
-    use super::CreationOptions;
-
-    #[derive(Default)]
-    pub struct VideoHashBuilder {
-        options: CreationOptions,
+impl VideoHashBuilder {
+    /// Create a video hash builder with the selected [`CreationOptions`]
+    pub fn from_options(options: CreationOptions) -> Self {
+        Self { options }
     }
 
-    impl VideoHashBuilder {
-        /// Create a video hash builder with the selected [`CreationOptions`]
-        pub fn from_options(options: CreationOptions) -> Self {
-            Self { options }
-        }
-
-        pub fn hash(&self, src_path: PathBuf) -> VideoHashResult<VideoHash> {
-            super::gen_hash::<FrameReaderCfgGst>(src_path, self.options)
-        }
+    pub fn hash(&self, src_path: PathBuf) -> VideoHashResult<VideoHash> {
+        gen_hash(src_path, self.options)
     }
 }
 
-pub fn build_frame_reader<T: FrameReadCfgTrait>(
+pub fn build_frame_reader(
     src_path: impl AsRef<Path>,
     opts: CreationOptions,
-) -> Result<T, Error>
+) -> Result<FrameReadCfg, Error>
 where
-    T::E: std::error::Error,
 {
     let src_path = src_path.as_ref();
-    let mut builder = T::from_path(src_path);
+    let mut builder = FrameReadCfg::from_path(src_path);
 
-    // The video duration influcences the exact frames chosen to build the hash
-    let vid_duration = builder
-        .get_duration()
+    let vid_duration = get_duration(src_path)
         .map_err(|_e| Error::NotVideo)?
         .as_secs_f64();
 
@@ -200,10 +156,9 @@ where
     Ok(builder)
 }
 
-fn iterate_video_frames<T: FrameReadCfgTrait + Clone>(
-    cfg: &T,
-) -> Result<impl Iterator<Item = GrayImage>, String> {
+fn iterate_video_frames(cfg: &FrameReadCfg) -> Result<impl Iterator<Item = GrayImage>, String> {
     let mut it = cfg.clone().spawn_gray().peekable();
+
     match it.peek() {
         Some(Err(e)) => Err(format!("{e:?}")),
         None => Err("None".to_string()),
@@ -256,18 +211,13 @@ fn detect_crop(frames: &[GrayImage], detect_method: Cropdetect) -> Option<Crop> 
     }
 }
 
-pub fn gen_hash<T: FrameReadCfgTrait + Clone>(
-    src_path: PathBuf,
-    opts: CreationOptions,
-) -> Result<VideoHash, crate::Error> {
+pub fn gen_hash(src_path: PathBuf, opts: CreationOptions) -> Result<VideoHash, crate::Error> {
     use crate::Error::VidProc;
-    let frame_read_cfg = build_frame_reader::<T>(src_path.clone(), opts)?;
+    let frame_read_cfg = build_frame_reader(src_path.clone(), opts)?;
     let frames = iterate_video_frames(&frame_read_cfg).map_err(VidProc)?;
     let frames = crop_video_frames(frames, opts.cropdetect)?;
 
-    let duration = frame_read_cfg
-        .get_duration()
-        .map_err(|e| VidProc(format!("{e:?}")))?;
+    let duration = get_duration(&src_path).map_err(|e| VidProc(format!("{e:?}")))?;
 
     VideoHash::from_frames(frames, src_path, duration.as_secs() as u32)
 }

@@ -13,3 +13,5 @@ file.out
 **/perf.data.old
 **/vid_dup_finder_example_cache.bin
 Cargo.lock
+vid_frame_iter/*.bmp
+vid_frame_iter/image_file.png

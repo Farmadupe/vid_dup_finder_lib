@@ -8,7 +8,9 @@ use std::{
 };
 
 use crossbeam_channel::{Receiver, Select, Sender};
-use ffmpeg_gst_wrapper::FrameReadCfgTrait;
+
+use ffmpeg_gst_wrapper::{get_duration, get_resolution};
+
 use image::{
     buffer::ConvertBuffer,
     codecs::{avif::AvifEncoder, jpeg::JpegEncoder},
@@ -392,27 +394,11 @@ pub fn start_cache_thread(
                                 .unwrap();
 
                             let durations = entry
-                                    .thunk
-                                    .entries()
-                                    .iter()
-                                    .map(|p| {
-                                        #[cfg(feature="gstreamer_backend")]
-                                        let val = ffmpeg_gst_wrapper::gst_impl::FrameReaderCfgGst::from_path(
-                                            p,
-                                        )
-                                        .get_duration()
-                                        .unwrap_or_default();
-
-                                        #[cfg(feature="ffmpeg_backend")]
-                                        let val = ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg::from_path(
-                                            p,
-                                        )
-                                        .get_duration()
-                                        .unwrap_or_default();
-
-                                    val
-                                    })
-                                    .collect::<Vec<_>>();
+                                .thunk
+                                .entries()
+                                .iter()
+                                .map(|p| get_duration(&p).unwrap_or_default())
+                                .collect::<Vec<_>>();
 
                             let _ = duration_cache
                                 .lock()
@@ -422,25 +408,12 @@ pub fn start_cache_thread(
                                 .send(GuiRsp::VidDuration(entry.clone(), durations))
                                 .unwrap();
 
-                            let resolutions = entry.thunk.entries().iter().map(|p| {
-                                #[cfg(feature="gstreamer_backend")]
-                                let val = ffmpeg_gst_wrapper::gst_impl::FrameReaderCfgGst::from_path(
-                                    p,
-                                )
-                                .get_resolution()
-                                .unwrap_or_default();
-
-                                #[cfg(feature="ffmpeg_backend")]
-                                let val = ffmpeg_gst_wrapper::ffmpeg_impl::FrameReaderCfgFfmpeg::from_path(
-                                    p,
-                                )
-                                .get_resolution()
-                                .unwrap_or_default();
-
-                            val
-
-
-                            }).collect::<Vec<_>>();
+                            let resolutions = entry
+                                .thunk
+                                .entries()
+                                .iter()
+                                .map(|p| get_resolution(&p).unwrap_or_default())
+                                .collect::<Vec<_>>();
 
                             let _ = resolution_cache
                                 .lock()

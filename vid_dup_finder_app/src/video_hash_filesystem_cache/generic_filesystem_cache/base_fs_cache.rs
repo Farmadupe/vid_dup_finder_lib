@@ -1,5 +1,4 @@
 use std::{
-    fmt::Debug,
     io::Write,
     path::{Path, PathBuf},
     sync::atomic::{AtomicU32, Ordering::Relaxed},
@@ -26,7 +25,7 @@ use super::errors::{
 //Types defining the on-disk format of the filesystem cacher.
 type CacheDiskFormat<T> = std::collections::HashMap<PathBuf, T>;
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct BaseFsCache<T> {
     loaded_from_disk: bool,
     cache_save_threshold: u32,
@@ -106,7 +105,11 @@ where
 
         match BACKEND {
             SerializationBackend::Bincode => {
-                if let Err(e) = bincode::serialize_into(&mut cache_buf, &*readable_cache) {
+                if let Err(e) = bincode::serde::encode_into_std_write(
+                    &*readable_cache,
+                    &mut cache_buf,
+                    bincode::config::standard(),
+                ) {
                     return Err(Serialization {
                         src: format!("{e}"),
                         path: self.cache_path.clone(),
@@ -185,17 +188,20 @@ where
         };
 
         //we may fail to read the hash file. This most likely to occur in development if <T> is changed.
-        let reader = std::io::BufReader::new(cache_file);
+        let mut reader = std::io::BufReader::new(cache_file);
         let cache_file_data: CacheDiskFormat<_> = match BACKEND {
-            SerializationBackend::Bincode => match bincode::deserialize_from(reader) {
-                Ok(data) => data,
-                Err(e) => {
-                    return Err(Deserialization {
-                        src: format!("{e}"),
-                        path: self.cache_path.clone(),
-                    })
+            SerializationBackend::Bincode => {
+                match bincode::serde::decode_from_std_read(&mut reader, bincode::config::standard())
+                {
+                    Ok(data) => data,
+                    Err(e) => {
+                        return Err(Deserialization {
+                            src: format!("{e}"),
+                            path: self.cache_path.clone(),
+                        })
+                    }
                 }
-            },
+            }
             SerializationBackend::Json => match serde_json::from_reader(reader) {
                 Ok(data) => data,
                 Err(e) => {

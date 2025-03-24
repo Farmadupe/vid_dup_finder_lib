@@ -10,11 +10,6 @@ use std::{
 
 use crossbeam_channel::{self, Receiver, Sender};
 
-#[cfg(feature = "gstreamer_backend")]
-use ffmpeg_gst_wrapper::{gst_impl::FrameReaderCfgGst, FrameReadCfgTrait};
-
-#[cfg(feature = "ffmpeg_backend")]
-use ffmpeg_gst_wrapper::{ffmpeg_impl::FrameReaderCfgFfmpeg, FrameReadCfgTrait};
 use image::{buffer::ConvertBuffer, RgbImage};
 
 use rayon::prelude::*;
@@ -101,11 +96,7 @@ fn render_thumbs(src_path: &Path, render_details: RenderDetails) -> RgbImage {
     let max_thumbs = 3;
     let opts = CreationOptions::default();
 
-    #[cfg(feature = "gstreamer_backend")]
-    let cfg = build_frame_reader::<FrameReaderCfgGst>(src_path, opts);
-
-    #[cfg(feature = "ffmpeg_backend")]
-    let cfg = build_frame_reader::<FrameReaderCfgFfmpeg>(src_path, opts);
+    let cfg = build_frame_reader(src_path, opts);
 
     let frame_iter_cfg = match cfg {
         Ok(obj) => obj,

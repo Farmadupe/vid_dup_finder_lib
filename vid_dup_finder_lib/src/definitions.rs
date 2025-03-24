@@ -33,17 +33,7 @@ pub const DEFAULT_VID_HASH_DURATION: f64 = 10.0;
 //This generates a cube of DCT_SIZExDCT_SIZExDCT_SIZE bits, of which the HASH_SIZE cube MSBs will be taken
 pub const DCT_SIZE: u32 = 16;
 
-#[cfg(any(
-    all(feature = "hash_size_6", not(feature = "hash_size_10")),
-    all(not(feature = "hash_size_6"), not(feature = "hash_size_10"))
-))]
 pub const HASH_SIZE: u32 = 6;
-
-#[cfg(all(not(feature = "hash_size_6"), feature = "hash_size_10"))]
-pub const HASH_SIZE: u32 = 10;
-
-#[cfg(all(feature = "hash_size_6", feature = "hash_size_10"))]
-compile_error!("features 'hash_size_6' and 'hash_size_10' cannot be selected at the same time");
 
 //At user-level the tolerance parameter is specified as real between 0 and 1.
 //The is the scaling factor to map into the integer-domain being used for calculations.

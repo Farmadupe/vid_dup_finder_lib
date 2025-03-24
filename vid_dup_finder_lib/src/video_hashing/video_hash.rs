@@ -276,8 +276,8 @@ pub mod test_util {
         #[must_use]
         pub fn hash_with_spatial_distance(&self, target_distance: u32, rng: &mut StdRng) -> Self {
             let mut flip_a_bit = |bits: &mut [usize]| {
-                let chosen_qword = rng.gen_range(0..bits.len());
-                let chosen_bit = rng.gen_range(0..usize::BITS);
+                let chosen_qword = rng.random_range(0..bits.len());
+                let chosen_bit = rng.random_range(0..usize::BITS);
                 bits[chosen_qword] ^= 2usize.pow(chosen_bit);
             };
 
@@ -297,7 +297,7 @@ pub mod test_util {
 
             let mut hash: BitArray<[usize; HASH_WORDS as usize], Lsb0> = BitArray::ZERO;
             for mut bit in hash.iter_mut().take(HASH_BITS as usize) {
-                *bit = rng.gen_bool(0.5);
+                *bit = rng.random_bool(0.5);
             }
 
             Self {

@@ -383,7 +383,7 @@ impl MatchDb {
             );
 
             let mut f = std::fs::File::create(confirmed_path).expect(&err_msg);
-            let w = std::io::BufWriter::new(&f);
+            let mut w = std::io::BufWriter::new(&f);
             let data = self
                 .confirmed_groups()
                 .map(|x| {
@@ -394,8 +394,10 @@ impl MatchDb {
                 .collect::<Vec<Vec<_>>>();
 
             //serde_json::to_writer_pretty(w, &data).expect(&err_msg);
-            bincode::serialize_into(w, &data).unwrap();
+            bincode::serde::encode_into_std_write(&data, &mut w, bincode::config::standard())
+                .unwrap();
 
+            std::mem::drop(w);
             f.flush().expect(&err_msg);
         }
 
@@ -452,10 +454,12 @@ impl MatchDb {
             );
 
             let mut f = std::fs::File::create(falsepos_db_path).expect(&err_msg);
-            let w = std::io::BufWriter::new(&f);
+            let mut w = std::io::BufWriter::new(&f);
             let data = self.all_falsepos_entries();
             // serde_json::to_writer_pretty(w, &data).expect(&err_msg);
-            bincode::serialize_into(w, &data).unwrap();
+            bincode::serde::encode_into_std_write(&data, &mut w, bincode::config::standard())
+                .unwrap();
+            std::mem::drop(w);
             f.flush().expect(&err_msg);
         }
     }
@@ -471,11 +475,12 @@ impl MatchDb {
 
             let f = std::fs::File::open(&confirmed_path)
                 .map_err(|_e| MatchDbError::ConfirmedFileMissing(confirmed_path.clone()))?;
-            let r = std::io::BufReader::new(f);
+            let mut r = std::io::BufReader::new(f);
 
-            let data: Vec<Vec<MatchMapEntry>> = bincode::deserialize_from(r).map_err(|_e| {
-                MatchDbError::ConfirmedFileDeserializeError(confirmed_path.clone())
-            })?;
+            let data: Vec<Vec<MatchMapEntry>> =
+                bincode::serde::decode_from_std_read(&mut r, bincode::config::standard()).map_err(
+                    |_e| MatchDbError::ConfirmedFileDeserializeError(confirmed_path.clone()),
+                )?;
 
             let mut confirmed = MatchMap::default();
             for entry in data {
@@ -491,9 +496,11 @@ impl MatchDb {
 
             let f = std::fs::File::open(&falsepos_path)
                 .map_err(|_e| MatchDbError::FalseposFileMissing(falsepos_path.clone()))?;
-            let r = std::io::BufReader::new(f);
-            let data: Vec<[PathBuf; 2]> = bincode::deserialize_from(r)
-                .map_err(|_e| MatchDbError::FalseposFileDeserializeError(falsepos_path.clone()))?;
+            let mut r = std::io::BufReader::new(f);
+            let data: Vec<[PathBuf; 2]> =
+                bincode::serde::decode_from_std_read(&mut r, bincode::config::standard()).map_err(
+                    |_e| MatchDbError::FalseposFileDeserializeError(falsepos_path.clone()),
+                )?;
             let mut falsepos = FalseposMap::default();
             for entry in data {
                 falsepos.insert(entry.iter());
@@ -747,11 +754,6 @@ impl MatchDb {
             }
         }
 
-        #[cfg(feature = "print_timings")]
-        println!(
-            "unmatched fix time: {}",
-            unmatched_fix_start.elapsed().as_secs_f64()
-        );
         Ok(())
     }
 }

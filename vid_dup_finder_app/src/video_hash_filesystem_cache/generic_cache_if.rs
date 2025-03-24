@@ -30,11 +30,7 @@ impl CacheInterface for GenericCacheIf {
             cropdetect: self.cropdetect,
         };
 
-        #[cfg(feature = "gstreamer_backend")]
-        let new_entry = gstreamer_builder::VideoHashBuilder::from_options(opts).hash(src_path);
-
-        #[cfg(feature = "ffmpeg_backend")]
-        let new_entry = ffmpeg_builder::VideoHashBuilder::from_options(opts).hash(src_path);
+        let new_entry = VideoHashBuilder::from_options(opts).hash(src_path);
 
         match &new_entry {
             Ok(hash) => info!(target: "hash_creation",

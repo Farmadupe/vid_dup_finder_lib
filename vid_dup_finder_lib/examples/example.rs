@@ -1,4 +1,3 @@
-use ffmpeg_builder::VideoHashBuilder;
 use vid_dup_finder_lib::*;
 
 /// Example usage of Vid Dup Finder (without caching)

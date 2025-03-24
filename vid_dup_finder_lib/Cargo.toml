@@ -16,8 +16,6 @@ version = "0.2.0"
 "gstreamer_backend" = ["gstreamer", "ffmpeg_gst_wrapper/gstreamer_backend"]
 "default" = ["ffmpeg_backend"]
 "debug_hash_generation" = []
-"hash_size_6" = []
-"hash_size_10" = []
 
 
 [lib]
@@ -36,14 +34,15 @@ test = true
 image = { version = "0.25" }
 vid_dup_finder_common = { path = "../vid_dup_finder_common", version = "0.2.0" }
 bitvec = "1.0"
-itertools = "0.13"
+itertools = "0.14"
 ndarray = "0.16"
-rand = "0.8"
+rand = "0.9"
 rustdct = "0.7"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
 ffmpeg_gst_wrapper = { path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.2.0" }
 enum-utils = "0.1"
+cfg-if = "1.0"
 
 
 [target.'cfg(unix)'.dependencies]
@@ -51,4 +50,4 @@ gstreamer = { version = "0.23", optional = true }
 
 
 [dev-dependencies]
-itertools = "0.13"
+itertools = "0.14"
