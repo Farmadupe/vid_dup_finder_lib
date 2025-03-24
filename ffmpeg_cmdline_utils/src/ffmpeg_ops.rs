@@ -45,21 +45,21 @@ impl Iterator for FfmpegFrameIter {
         }
 
         let raw_buf_size = if self.grayscale {
-            usize::try_from(self.x)
-                .ok()?
-                .checked_mul(usize::try_from(self.y).ok()?)?
+            u64::from(self.x).checked_mul(u64::from(self.y))?
         } else {
-            usize::try_from(self.x)
-                .ok()?
-                .checked_mul(usize::try_from(self.y).ok()?)?
+            u64::from(self.x)
+                .checked_mul(u64::from(self.y))?
                 .checked_mul(3)?
         };
         // Attempt to prevent OOM on very implausible sizes
-        let five_gigabytes = 5368709120usize;
+        let five_gigabytes = 5368709120u64;
         if raw_buf_size > five_gigabytes {
             return None;
         }
-        let mut raw_buf = vec![0u8; raw_buf_size];
+        if raw_buf_size as u128 > usize::MAX as u128 {
+            return None;
+        }
+        let mut raw_buf = vec![0u8; raw_buf_size as usize];
 
         // Otherwise wait for the frame until the timeout is exceeded
         let stdout = self.child.stdout.as_mut().unwrap();
