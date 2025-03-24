@@ -33,7 +33,7 @@ pub const DEFAULT_VID_HASH_DURATION: f64 = 10.0;
 //This generates a cube of DCT_SIZExDCT_SIZExDCT_SIZE bits, of which the HASH_SIZE cube MSBs will be taken
 pub const DCT_SIZE: u32 = 16;
 
-pub const HASH_SIZE: u32 = 6;
+pub const HASH_SIZE: u32 = 10;
 
 //At user-level the tolerance parameter is specified as real between 0 and 1.
 //The is the scaling factor to map into the integer-domain being used for calculations.

@@ -22,6 +22,5 @@ pub use compositing::grid_images_rgb;
 pub use compositing::row_images;
 pub use crop::Crop;
 pub use resize_gray::crop_resize_buf;
-pub use resize_gray::crop_resize_flat;
 pub use video_frames_gray::VideoFramesGray;
 pub use video_frames_rgb::FrameSeqRgb;

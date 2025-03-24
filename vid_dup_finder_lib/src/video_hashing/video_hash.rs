@@ -8,7 +8,7 @@ use bitvec::prelude::*;
 
 use serde::{Deserialize, Serialize};
 
-use vid_dup_finder_common::crop_resize_flat;
+use vid_dup_finder_common::crop_resize_buf;
 use vid_dup_finder_common::Crop;
 
 use crate::{
@@ -56,9 +56,7 @@ impl VideoHash {
 
         let no_crop = Crop::from_edge_offsets((width, height), 0, 0, 0, 0);
 
-        let frames_64x64 = it.filter_map(|frame| {
-            crop_resize_flat(frame.as_flat_samples(), dct_size, dct_size, no_crop)
-        });
+        let frames_64x64 = it.map(|frame| crop_resize_buf(frame, dct_size, dct_size, no_crop));
 
         let dct = Dct3d::from_images(frames_64x64).ok_or(NotEnoughFrames)?;
 

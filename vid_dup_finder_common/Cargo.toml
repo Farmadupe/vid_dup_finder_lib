@@ -15,7 +15,7 @@ path = "src/lib.rs"
 
 [dependencies]
 image = { version = "0.25", default-features = false }
-fast_image_resize = { version = "3.0.1" }
+fast_image_resize = { version = "5.1", features= ["image"]}
 imageproc = "0.25"
 itertools = "0.14"
 rand = "0.9"
