@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches: [ "firstpipe" ]
+  pull_request:
+    branches: [ "firstpipe" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  DEBIAN_FRONTEND: NONINTERACTIVE
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install deps
+      run: |
+        sudo apt-get update && sudo apt-get -y install ffmpeg jq libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+           gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+           gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+           gstreamer1.0-libav libgstrtspserver-1.0-dev libges-1.0-dev
+    - name: Build lib (ffmpeg)
+      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features ffmpeg_backend
+    - name: Build lib (gstreamer)
+      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features gstreamer_backend
+    - name: Run tests (ffmpeg backend)
+      run: cargo test --features ffmpeg_backend
+    - name: Run tests (gstreamer backend)
+      run: cargo test --features gstreamer_backend
+    - name: Run tests (ffmpeg backend, release)
+      run: cargo test --features ffmpeg_backend --release
+    - name: Run tests (gstreamer backend, release)
+      run: cargo test --features gstreamer_backend --release
+    - name: Build Application and load test videos (gstreamer)
+      run: |
+        set -e
+        cargo run --release --no-default-features --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  --update-cache-only
+        LEN=$(cargo run --release --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  | jq length)
+        if [ LEN -ne "2" ]; then
+          exit 1
+        fi
+    
+
