@@ -1,33 +1,27 @@
-use image::RgbImage;
+use fast_image_resize::{images::ImageRef, Resizer};
+use image::{DynamicImage, RgbImage};
 
-use fast_image_resize as fr;
-use fr::DynamicImageView::U8x3 as DynView;
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, ops::Deref};
 
 #[must_use]
 pub fn resize_img_rgb(frame: &RgbImage, new_width: NonZeroU32, new_height: NonZeroU32) -> RgbImage {
-    let src_frame_fr = fr::ImageView::from_buffer(
-        frame.width().try_into().unwrap(),
-        frame.height().try_into().unwrap(),
-        frame.as_raw(),
+    let frame = ImageRef::new(
+        frame.width(),
+        frame.height(),
+        frame.deref(),
+        fast_image_resize::PixelType::U8x3,
     )
     .unwrap();
 
-    let mut dst_frame_buf =
-        vec![0u8; 3usize * u32::from(new_height) as usize * u32::from(new_height) as usize];
-    let dst_frame_fr =
-        fr::ImageViewMut::from_buffer(new_width, new_height, &mut dst_frame_buf).unwrap();
+    let mut dst_image = DynamicImage::ImageRgb8(RgbImage::new(new_width.into(), new_height.into()));
 
-    let mut resizer = fr::Resizer::new(fr::ResizeAlg::Convolution(fr::FilterType::Lanczos3));
+    let mut resizer = Resizer::new();
 
-    resizer
-        .resize(
-            &DynView(src_frame_fr),
-            &mut fr::DynamicImageViewMut::U8x3(dst_frame_fr),
-        )
-        .unwrap();
+    resizer.resize(&frame, &mut dst_image, None).unwrap();
 
-    let dst_frame_img = RgbImage::from_vec(new_width.into(), new_height.into(), dst_frame_buf);
+    let DynamicImage::ImageRgb8(dst_image) = dst_image else {
+        unreachable!()
+    };
 
-    dst_frame_img.unwrap()
+    dst_image
 }
