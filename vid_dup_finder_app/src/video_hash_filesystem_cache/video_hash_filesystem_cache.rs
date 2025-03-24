@@ -79,6 +79,17 @@ impl VideoHashFilesystemCache {
         skip_forward_amount: f64,
     ) -> Result<(), VdfCacheError> {
         let cache_path = cache_path.as_ref();
+
+
+        //create the parent directory if needed
+        if let Some(cache_dir) = cache_path.parent() {
+            if !cache_dir.exists() {
+                if let Err(_e) = std::fs::create_dir_all(cache_dir) {
+                    error!("Failed to create cache dir");
+                }
+            }
+        }
+
         let cache_exists = cache_path.exists();
 
         let cache_stem = &cache_path
