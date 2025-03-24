@@ -134,7 +134,7 @@ impl VideoHashFilesystemCache {
     /// Returns an error if the cache has no entry for `src_path` .
     #[inline]
     pub fn fetch(&self, src_path: impl AsRef<Path>) -> Result<VideoHash, VdfCacheError> {
-        self.fetch_entry(src_path).map_err(VdfCacheError::from)
+        self.fetch_entry(src_path)
     }
 
     /// Get the paths of all [VideoHashes][VideoHash] stored in the cache.

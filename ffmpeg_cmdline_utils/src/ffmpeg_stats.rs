@@ -116,7 +116,7 @@ impl VideoInfo {
 
     fn parse_rotation(stats_parsed: &Value) -> Result<FfmpegVideoRotation, FfmpegError> {
         //extract the rotation from the JSON
-        let Some(json_data) = Self::first_video(&stats_parsed).and_then(|video_stream| {
+        let Some(json_data) = Self::first_video(stats_parsed).and_then(|video_stream| {
             video_stream
                 .get("side_data_list")
                 .and_then(|y| y.get(0).and_then(|x| x.get("rotation").cloned()))
@@ -130,9 +130,9 @@ impl VideoInfo {
             Value::Number(val) => val.as_i64().unwrap(),
             Value::String(val) => val.parse::<i64>().unwrap(),
             _ => {
-                return Err(FfmpegError::Other(format!(
-                    "Failed to parse video rotation"
-                )))
+                return Err(FfmpegError::Other(
+                    "Failed to parse video rotation".to_owned(),
+                ))
             }
         };
 
@@ -144,9 +144,9 @@ impl VideoInfo {
             180 | -180 => FfmpegVideoRotation::Rot180,
             -90 | 270 => FfmpegVideoRotation::Rot270,
             _ => {
-                return Err(FfmpegError::Other(format!(
-                    "Failed to parse video rotation"
-                )))
+                return Err(FfmpegError::Other(
+                    "Failed to parse video rotation".to_owned(),
+                ))
             }
         };
 

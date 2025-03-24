@@ -37,7 +37,7 @@ fn get_duration_gst(src_path: &Path) -> Result<Duration, FrameReadCfgErr> {
     match vid_frame_iter::mediainfo_utils::duration(uri_string) {
         Ok(Some(duration)) => Ok(duration),
         Ok(None) => Err(FrameReadCfgErr("unable to obtain duration".to_string())),
-        Err(e) => Err(FrameReadCfgErr(format!("{}", e.message()))),
+        Err(e) => Err(FrameReadCfgErr(e.message().to_string())),
     }
 }
 
@@ -54,16 +54,16 @@ fn get_resolution_gst(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr> {
     match vid_frame_iter::mediainfo_utils::dimensions(uri_string) {
         Ok(Some(dims)) => Ok(dims),
         Ok(None) => Err(FrameReadCfgErr("unable to obtain resolution".to_string())),
-        Err(e) => Err(FrameReadCfgErr(format!("{}", e.message()))),
+        Err(e) => Err(FrameReadCfgErr(e.message().to_string())),
     }
 }
 
 pub fn get_resolution(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "gstreamer_backend")] {
-            return get_resolution_gst(&src_path);
+            get_resolution_gst(src_path)
         } else if #[cfg(feature = "ffmpeg_backend")] {
-            return get_resolution_ffmpeg(&src_path);
+            get_resolution_ffmpeg(src_path)
         }
     }
 }
@@ -71,9 +71,9 @@ pub fn get_resolution(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr> {
 pub fn get_duration(src_path: &Path) -> Result<Duration, FrameReadCfgErr> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "gstreamer_backend")] {
-            return get_duration_gst(&src_path);
+            get_duration_gst(src_path)
         } else if #[cfg(feature = "ffmpeg_backend")] {
-            return get_duration_ffmpeg(&src_path);
+            get_duration_ffmpeg(src_path)
         }
     }
 }
@@ -86,6 +86,7 @@ pub struct FrameReadCfg {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)] // The field is used...
 pub struct FrameReadCfgErr(String);
 
 impl FrameReadCfg {
@@ -258,9 +259,9 @@ impl FrameReadCfg {
     pub fn spawn_gray(self) -> impl Iterator<Item = Result<GrayImage, FrameReadCfgErr>> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "gstreamer_backend")] {
-                return self.spawn_gray_gst();
+                self.spawn_gray_gst()
             } else if #[cfg(feature = "ffmpeg_backend")] {
-                return self.spawn_gray_ffmpeg();
+                self.spawn_gray_ffmpeg()
             }
         }
     }
@@ -268,9 +269,9 @@ impl FrameReadCfg {
     pub fn spawn_rgb(self) -> impl Iterator<Item = Result<RgbImage, FrameReadCfgErr>> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "gstreamer_backend")] {
-                return self.spawn_rgb_gst();
+                self.spawn_rgb_gst()
             } else if #[cfg(feature = "ffmpeg_backend")] {
-                return self.spawn_rgb_ffmpeg();
+                self.spawn_rgb_ffmpeg()
             }
         }
     }

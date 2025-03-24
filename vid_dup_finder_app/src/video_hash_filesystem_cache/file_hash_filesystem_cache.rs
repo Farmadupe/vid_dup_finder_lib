@@ -88,7 +88,6 @@ impl FileContentCache {
         src_path: impl AsRef<Path>,
     ) -> Result<blake3::Hash, FileContentCacheErrorKind> {
         self.fetch_entry(src_path)
-            .map_err(FileContentCacheErrorKind::from)
     }
 
     /// Get the paths of all VideoHashes stored in the cache.
@@ -231,7 +230,7 @@ impl FileContentCache {
         src_path: impl AsRef<Path>,
     ) -> Result<blake3::Hash, FileContentCacheErrorKind> {
         match self.0.fetch(src_path) {
-            Ok(x) => x.map_err(FileContentCacheErrorKind::from),
+            Ok(x) => x,
             Err(e) => Err(FileContentCacheErrorKind::from(e)),
         }
     }
