@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [ "firstpipe" ]
+    branches: [ "pipeline" ]
   pull_request:
-    branches: [ "firstpipe" ]
+    branches: [ "pipeline" ]
 
 env:
   CARGO_TERM_COLOR: always
