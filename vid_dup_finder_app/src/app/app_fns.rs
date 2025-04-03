@@ -827,7 +827,13 @@ fn update_hash_cache(cfg: &AppCfg, cache: &VideoHashFilesystemCache) -> eyre::Re
     let t = iter_tee::Tee::new(it);
 
     cache.update_using_fs(t.clone());
-    cache.remove_deleted_items(t.clone());
+    for src_path in cache.all_cached_paths() {
+        if file_filter.includes(&src_path) {
+            if let Ok(false) = src_path.try_exists() {
+                cache.remove(src_path).unwrap();
+            }
+        }
+    }
     cache.save().unwrap();
 
     #[cfg(feature = "print_timings")]

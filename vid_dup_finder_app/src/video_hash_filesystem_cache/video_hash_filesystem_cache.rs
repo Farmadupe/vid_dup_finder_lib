@@ -80,7 +80,6 @@ impl VideoHashFilesystemCache {
     ) -> Result<(), VdfCacheError> {
         let cache_path = cache_path.as_ref();
 
-
         //create the parent directory if needed
         if let Some(cache_dir) = cache_path.parent() {
             if !cache_dir.exists() {
@@ -203,6 +202,7 @@ impl VideoHashFilesystemCache {
         }
     }
 
+    #[allow(dead_code)]
     pub fn remove_deleted_items(&self, paths: impl IntoIterator<Item = impl AsRef<Path>>) {
         //Remove files from cache if they got deleted from the filesystem.
         //but only if in a start path
