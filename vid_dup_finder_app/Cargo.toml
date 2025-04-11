@@ -7,7 +7,7 @@ keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
 license-file = "README.md"
 name = "vid_dup_finder"
 repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
-version = "0.2.4"
+version = "0.2.5"
 build = "build.rs"
 
 [features]
@@ -83,7 +83,7 @@ lazy_static = { version = "1.4", optional = true }
 libc = { version = "0.2", optional = true }
 regex = { version = "1.5", optional = true }
 sha2 = { version = "0.10", optional = true }
-vid_frame_iter = { path = "../vid_frame_iter", optional = true, version = "0.2.0" }
+vid_frame_iter = { path = "../vid_frame_iter", optional = true, version = "0.2.1" }
 
 
 # Gui slint
