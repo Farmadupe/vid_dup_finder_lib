@@ -2,7 +2,7 @@
 license = "MIT OR Apache-2.0"
 edition = "2021"
 name = "vid_frame_iter"
-version = "0.2.0"
+version = "0.2.1"
 repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
 description = "a library to iterate over files, using gstreamer"
 
