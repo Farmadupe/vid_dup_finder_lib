@@ -1,4 +1,5 @@
 {
     "rust-analyzer.check.features": "all",
     "rust-analyzer.check.command": "clippy",
+    "rust-analyzer.check.allTargets": null,
 }

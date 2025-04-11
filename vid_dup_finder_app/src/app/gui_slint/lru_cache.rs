@@ -397,7 +397,7 @@ pub fn start_cache_thread(
                                 .thunk
                                 .entries()
                                 .iter()
-                                .map(|p| get_duration(&p).unwrap_or_default())
+                                .map(|p| get_duration(p).unwrap_or_default())
                                 .collect::<Vec<_>>();
 
                             let _ = duration_cache
@@ -412,7 +412,7 @@ pub fn start_cache_thread(
                                 .thunk
                                 .entries()
                                 .iter()
-                                .map(|p| get_resolution(&p).unwrap_or_default())
+                                .map(|p| get_resolution(p).unwrap_or_default())
                                 .collect::<Vec<_>>();
 
                             let _ = resolution_cache

@@ -2,9 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ "pipeline" ]
   pull_request:
-    branches: [ "pipeline" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -39,7 +37,7 @@ jobs:
       run: |
         set -e
         cargo run --release --no-default-features --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  --update-cache-only
-        LEN=$(cargo run --release --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  | jq length)
+        LEN=$(cargo run --release --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids --output-format json | jq length)
         if [ LEN -ne "2" ]; then
           exit 1
         fi

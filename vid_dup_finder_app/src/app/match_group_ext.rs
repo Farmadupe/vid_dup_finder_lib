@@ -25,7 +25,7 @@ pub trait MatchGroupExt {
 impl MatchGroupExt for MatchGroup {
     #[cfg(target_family = "unix")]
     fn to_image(&self) -> Result<RgbImage, String> {
-        return to_image_temp(self.contained_paths());
+        to_image_temp(self.contained_paths())
     }
 
     #[cfg(target_family = "windows")]

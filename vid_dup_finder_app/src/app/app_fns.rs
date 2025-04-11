@@ -156,7 +156,8 @@ fn run_app_inner(cfg: &AppCfg) -> eyre::Result<()> {
     // };
 
     #[cfg(feature = "print_timings")]
-    println!(
+    #[allow(clippy::print_stdout)]
+    let () = println!(
         "cache_load time: {}",
         cache_load_start.elapsed().as_secs_f64()
     );
@@ -197,7 +198,8 @@ fn run_app_inner(cfg: &AppCfg) -> eyre::Result<()> {
         };
 
         #[cfg(feature = "print_timings")]
-        println!(
+        #[allow(clippy::print_stdout)]
+        let () = println!(
             "match_db_load time: {}",
             match_db_load_start.elapsed().as_secs_f64()
         );
@@ -451,7 +453,8 @@ fn search_disk(
         .collect::<Vec<_>>();
 
     #[cfg(feature = "print_timings")]
-    println!(
+    #[allow(clippy::print_stdout)]
+    let () = println!(
         "hash_fetch time: {}",
         hash_fetch_start.elapsed().as_secs_f64()
     );
@@ -488,7 +491,8 @@ fn search_disk(
     }
 
     #[cfg(feature = "print_timings")]
-    println!("search time: {}", search_start.elapsed().as_secs_f64());
+    #[allow(clippy::print_stdout)]
+    let () = println!("search time: {}", search_start.elapsed().as_secs_f64());
 
     #[cfg(feature = "print_timings")]
     let match_db_filter_start = Instant::now();
@@ -560,7 +564,8 @@ fn search_disk(
                 .collect::<Vec<_>>()
         }
         #[cfg(feature = "print_timings")]
-        println!(
+        #[allow(clippy::print_stdout)]
+        let () = println!(
             "matchdb_remove_known time: {}",
             remove_known_start.elapsed().as_secs_f64()
         );
@@ -598,7 +603,8 @@ fn search_disk(
         // }
 
         #[cfg(feature = "print_timings")]
-        println!(
+        #[allow(clippy::print_stdout)]
+        let () = println!(
             "match_db_coalesce time: {}",
             match_db_coalesce_start.elapsed().as_secs_f64()
         );
@@ -632,7 +638,8 @@ fn search_disk(
     };
 
     #[cfg(feature = "print_timings")]
-    println!(
+    #[allow(clippy::print_stdout)]
+    let () = println!(
         "match_db_filter time: {}",
         match_db_filter_start.elapsed().as_secs_f64()
     );
@@ -827,11 +834,18 @@ fn update_hash_cache(cfg: &AppCfg, cache: &VideoHashFilesystemCache) -> eyre::Re
     let t = iter_tee::Tee::new(it);
 
     cache.update_using_fs(t.clone());
-    cache.remove_deleted_items(t.clone());
+    for src_path in cache.all_cached_paths() {
+        if file_filter.includes(&src_path) {
+            if let Ok(false) = src_path.try_exists() {
+                cache.remove(src_path).unwrap();
+            }
+        }
+    }
     cache.save().unwrap();
 
     #[cfg(feature = "print_timings")]
-    println!(
+    #[allow(clippy::print_stdout)]
+    let () = println!(
         "cache_update time: {}",
         cache_update_start.elapsed().as_secs_f64()
     );
