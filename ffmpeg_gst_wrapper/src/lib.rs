@@ -6,10 +6,6 @@ use std::{
 
 use image::{GrayImage, RgbImage};
 
-//#[cfg(all(feature = "ffmpeg_backend", feature = "gstreamer_backend"))]
-//compile_error!("feature \"ffmpeg_backend\" and feature \"gstreamer_backend\" cannot be enabled at the same time");
-
-#[cfg(feature = "ffmpeg_backend")]
 #[allow(dead_code)]
 fn get_resolution_ffmpeg(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr> {
     let info = ffmpeg_cmdline_utils::VideoInfo::new(src_path)
@@ -17,7 +13,6 @@ fn get_resolution_ffmpeg(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr>
     Ok(info.resolution())
 }
 
-#[cfg(feature = "ffmpeg_backend")]
 #[allow(dead_code)]
 fn get_duration_ffmpeg(src_path: &Path) -> Result<Duration, FrameReadCfgErr> {
     let info = ffmpeg_cmdline_utils::VideoInfo::new(src_path)
@@ -62,7 +57,7 @@ pub fn get_resolution(src_path: &Path) -> Result<(u32, u32), FrameReadCfgErr> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "gstreamer_backend")] {
             get_resolution_gst(src_path)
-        } else if #[cfg(feature = "ffmpeg_backend")] {
+        } else {
             get_resolution_ffmpeg(src_path)
         }
     }
@@ -72,7 +67,7 @@ pub fn get_duration(src_path: &Path) -> Result<Duration, FrameReadCfgErr> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "gstreamer_backend")] {
             get_duration_gst(src_path)
-        } else if #[cfg(feature = "ffmpeg_backend")] {
+        } else {
             get_duration_ffmpeg(src_path)
         }
     }
@@ -194,7 +189,6 @@ impl FrameReadCfg {
         })
     }
 
-    #[cfg(feature = "ffmpeg_backend")]
     #[allow(dead_code)]
     fn spawn_gray_ffmpeg(self) -> impl Iterator<Item = Result<GrayImage, FrameReadCfgErr>> {
         use ffmpeg_cmdline_utils::FfmpegFrameReaderBuilder;
@@ -225,7 +219,6 @@ impl FrameReadCfg {
         })
     }
 
-    #[cfg(feature = "ffmpeg_backend")]
     #[allow(dead_code)]
     fn spawn_rgb_ffmpeg(self) -> impl Iterator<Item = Result<RgbImage, FrameReadCfgErr>> {
         use ffmpeg_cmdline_utils::FfmpegFrameReaderBuilder;
@@ -260,7 +253,7 @@ impl FrameReadCfg {
         cfg_if::cfg_if! {
             if #[cfg(feature = "gstreamer_backend")] {
                 self.spawn_gray_gst()
-            } else if #[cfg(feature = "ffmpeg_backend")] {
+            } else {
                 self.spawn_gray_ffmpeg()
             }
         }
@@ -270,7 +263,7 @@ impl FrameReadCfg {
         cfg_if::cfg_if! {
             if #[cfg(feature = "gstreamer_backend")] {
                 self.spawn_rgb_gst()
-            } else if #[cfg(feature = "ffmpeg_backend")] {
+            } else  {
                 self.spawn_rgb_ffmpeg()
             }
         }

@@ -7,7 +7,7 @@ keywords = ["video", "duplicate", "phash", "perceptual", "hash"]
 license-file = "README.md"
 name = "vid_dup_finder"
 repository = "https://github.com/Farmadupe/vid_dup_finder_lib"
-version = "0.2.5"
+version = "0.2.6"
 build = "build.rs"
 
 [features]
@@ -21,26 +21,20 @@ gui_slint = [
     "dep:lru",
 ]
 parallel_loading = ["rayon"]
-ffmpeg_backend = [
-    "vid_dup_finder_lib/ffmpeg_backend",
-    "vid_dup_finder_lib/app_only_fns",
-    "ffmpeg_gst_wrapper/ffmpeg_backend",
-]
 gstreamer_backend = [
     "vid_dup_finder_lib/gstreamer_backend",
-    "vid_dup_finder_lib/app_only_fns",
     "ffmpeg_gst_wrapper/gstreamer_backend",
 ]
-default = ["parallel_loading", "ffmpeg_backend", "gui_slint"]
+default = ["parallel_loading", "gui_slint", "vid_dup_finder_lib/app_only_fns"]
 print_timings = []
 
 [[bin]]
 name = "vid_dup_finder"
 
 [dependencies]
-vid_dup_finder_lib = { path = "../vid_dup_finder_lib", version = "0.3.0" }
+vid_dup_finder_lib = { path = "../vid_dup_finder_lib", version = "0.4.0" }
 vid_dup_finder_common = { path = "../vid_dup_finder_common", version = "0.3.0" }
-ffmpeg_gst_wrapper = { path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.3.0" }
+ffmpeg_gst_wrapper = { path = "../ffmpeg_gst_wrapper", default-features = false, version = "0.4.0" }
 bincode = { version = "2.0", features = ["serde"] }
 clap = { version = "4.5", features = ["derive", "cargo", "string"] }
 directories-next = "2.0"

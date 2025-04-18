@@ -22,21 +22,23 @@ jobs:
            gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
            gstreamer1.0-libav libgstrtspserver-1.0-dev libges-1.0-dev
     - name: Build lib (ffmpeg)
-      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features ffmpeg_backend
+      run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml 
     - name: Build lib (gstreamer)
       run: cargo build --manifest-path vid_dup_finder_lib/Cargo.toml --features gstreamer_backend
+    - name: Run tests (no-default-features)
+      run: cargo test --no-default-features 
     - name: Run tests (ffmpeg backend)
-      run: cargo test --features ffmpeg_backend
+      run: cargo test 
     - name: Run tests (gstreamer backend)
       run: cargo test --features gstreamer_backend
     - name: Run tests (ffmpeg backend, release)
-      run: cargo test --features ffmpeg_backend --release
+      run: cargo test --release
     - name: Run tests (gstreamer backend, release)
       run: cargo test --features gstreamer_backend --release
     - name: Build Application and load test videos (gstreamer)
       run: |
         set -e
-        cargo run --release --no-default-features --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  --update-cache-only
+        cargo run --release --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids  --update-cache-only
         LEN=$(cargo run --release --features gstreamer_backend,gui_slint,parallel_loading -- --files vid_dup_finder_lib/examples/vids --output-format json | jq length)
         if [ LEN -ne "2" ]; then
           exit 1

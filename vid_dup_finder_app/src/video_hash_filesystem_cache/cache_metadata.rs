@@ -61,7 +61,7 @@ impl VdfCacheMetadata {
         cfg_if! {
             if #[cfg(feature = "gstreamer_backend")] {
                 let decode_backend = DecodeBackend::GstreamerBackend;
-            } else if #[cfg(feature = "ffmpeg_backend")] {
+            } else  {
                 let decode_backend = DecodeBackend::FfmpegBackend;
             }
         };
