@@ -51,4 +51,6 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Build
-      run: cargo build --release --bin vid_dup_finder --no-default-features
+      run: | 
+        cargo build --release --bin vid_dup_finder --no-default-features
+        target/release/vid_dup_finder.exe --files vid_dup_finder_lib/examples
