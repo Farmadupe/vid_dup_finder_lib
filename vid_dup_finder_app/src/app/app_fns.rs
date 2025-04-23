@@ -53,11 +53,8 @@ pub fn run_app() -> i32 {
 // vid_dup_finder can open a lot of file handles, so make sure that
 // more than the default 1024 is available
 
+#[cfg(target_family = "unix")]
 fn make_sure_lots_of_file_handles_are_available() {
-    if cfg!(target_family = "windows") {
-        return;
-    }
-
     const NOFILE: rlimit::Resource = rlimit::Resource::NOFILE;
     const MIN_NOFILE: u64 = 16384;
 
@@ -80,6 +77,7 @@ fn make_sure_lots_of_file_handles_are_available() {
 }
 
 fn run_app_inner(cfg: &AppCfg) -> eyre::Result<()> {
+    #[cfg(target_family = "unix")]
     make_sure_lots_of_file_handles_are_available();
 
     //shorten some long variable names
