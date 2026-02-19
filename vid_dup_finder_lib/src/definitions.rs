@@ -43,7 +43,7 @@ pub const HASH_BITS: u32 = HASH_SIZE.pow(3);
 pub const HASH_WORDS: u32 = HASH_BITS.div_ceil(usize::BITS);
 
 /// Algorithms to detect [black bars](https://en.wikipedia.org/wiki/Letterboxing_(filming))  around the edges of video frames
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, enum_utils::FromStr)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum Cropdetect {
     /// Do not detect letterboxing
     None,
@@ -51,4 +51,16 @@ pub enum Cropdetect {
     Letterbox,
     /// Detect regions of videos that contain motion
     Motion,
+}
+
+impl std::str::FromStr for Cropdetect {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "None" => Ok(Cropdetect::None),
+            "Letterbox" => Ok(Cropdetect::Letterbox),
+            "Motion" => Ok(Cropdetect::Motion),
+            _ => Err(()),
+        }
+    }
 }
