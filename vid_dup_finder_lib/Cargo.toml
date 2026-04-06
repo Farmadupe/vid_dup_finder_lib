@@ -34,7 +34,7 @@ image = { version = "0.25" }
 vid_dup_finder_common = { path = "../vid_dup_finder_common", version = "0.3.0" }
 bitvec = "1.0"
 itertools = "0.14"
-ndarray = "0.16"
+ndarray = "0.17"
 rand = "0.9"
 rustdct = "0.7"
 serde = { version = "1.0", features = ["derive"] }
